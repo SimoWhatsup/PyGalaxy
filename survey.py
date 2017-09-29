@@ -1,98 +1,69 @@
-#!/usr/bin/python
+# coding=utf-8
+
+import os
+import re
+import sys
+
+from helpers.helper_config import HelperConfig, FileNotFound
+from logger.logger import init_logger
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from clean_mosaic import *
-from combine_mosaics import *
-from combine_surveys import *
-from deconvolve_mosaic import *
-from extraction_hisa import *
-from galprop_skymap import *
-from make_correction import *
-from make_mosaic import *
-from mosaic import *
-from split_mosaic import *
+
+# from clean_mosaic import *
+# from combine_mosaics import *
+# from combine_surveys import *
+# from deconvolve_mosaic import *
+# from extraction_hisa import *
+# from galprop_skymap import *
+# from make_correction import *
+# from make_mosaic import *
+# from mosaic import *
+# from split_mosaic import *
 
 
 class Survey:
-    def __init__(self, survey='MySurvey', species='HI', mosaic='skymap', configFile=False,
-                 surveyConfig={'survey': 'MySurvey', 'species': 'HI'},
-                 mosaicConfig={'mosaic': 'skymap', 'lon': 'INDEF', 'lat': 'INDEF', 'z1': 'INDEF', 'z2': 'INDEF',
-                               'side': 'INDEF'},
-                 utilsConfig={'tcmb': 2.7,  # Cosmic Microwave Background temperature (K)
-                              'tspin': 125.,  # Excitation or Spin temperature (K) - 125 standard, 150 Fermi
-                              'xfactor': 1.9e20,  # CO Factor - Strong & Mattox (1996): X=NH2/Wco (K-1 cm-2 km-1 s)
-                              'c': 1.823e18,  # Costant (cm-2)
-                              'pc2cm': 3.08567758e18,  # Conversion factor from pc to cm (cm)
-                              'poverk': 4000.,
-                              'p': 1.0,  # Fraction of HI emission originating behind the HISA cloud
-                              'fn': 1.0},  # Fraction of particle density contributed by the HISA gas, fn = n_hisa/n_tot
-                 spectralConfig={"n_spectral": 7,  # size of box for spectral smoothing
-                                 "max_loops": 1000,  # maximum number of CLEAN iterations
-                                 "residual_frac": 0.03,  # residual fraction of smoothed for CLEAN cutoff
-                                 "clip_spectral": 0.8,  # fraction of r_max for adding to correction
-                                 "gain_spectral": 0.25,  # fraction of residual height added to correction
-                                 "fwhm_spectral": 8,  # FWHM of the Gaussian for CLEAN loop, in km/s
-                                 "hisa_f_spectral": -2.0,
-                                 # residual amplitude factor for potential HISA in spectral search
-                                 "temp_critical": 30.,  # brightness temperature threshold
-                                 "fit_narrow": 2.0,  # FWHM of Gaussian for narrow fit (km/s)
-                                 "fit_broad": 4.0,  # FWHM of Gaussian for broad fit (km/s)
-                                 "fit_qual": 2.0,  # Gaussian fit reliability cutoff
-                                 "dip_cut": 0.6,  # Cutoff for min morphological "dip" for spectral HISA
-                                 "fwhm_spatial_hisa": 5,
-                                 # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-                                 "min_hisa": 2.0},  # cutoff for min HISA amplitude after spatial smoothing
-                 spatialConfig={"n_spatial": 15,  # size of box for spatial smoothing
-                                "max_loops": 1000,  # max number of loops for CLEAN algorithm
-                                "high": 10,  # 10th (or Mth) highest peak in residual used as rmax
-                                "residual_frac": 0.03,  # fraction of max smoothed height for CLEAN loop cutoff
-                                "clip_spatial": 0.5,  # fraction of r_max for adding to correction
-                                "gain_spatial": 0.25,  # fraction of residual added to correction
-                                "fwhm_spatial": 20,  # FWHM of gaussian for CLEAN, in arcmin
-                                "noise_resolve": 20,  # angular resolution for calculation of sigma_obs, in minutes
-                                "hisa_f_spatial": -2.,  # residual amplitude factor for potential HISA in spatial search
-                                "temp_critical": 30.,  # min unabsorbed temperature for candidate HISA
-                                "amp_min_first": 4.,  # cutoff amplitude for first HISA filter (pre-smoothing)
-                                "fwhm_spatial_hisa": 5,
-                                # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-                                "min_hisa": 2.}):  # cutoff for min HISA amplitude after spatial smoothing
+    def __init__(self, survey='MySurvey', species='HI', mosaic='skymap', config_file=False):
 
-        surveyConfig['survey'] = survey
-        surveyConfig['species'] = species
-        mosaicConfig['mosaic'] = mosaic
-
-        self.logger = initLogger(survey + '_' + mosaic + '_' + species + '_Analysis')
+        self.logger = init_logger(survey + '_' + mosaic + '_' + species + '_Analysis')
         self.configfilename = 'config/' + survey + '_' + mosaic
 
-        if configFile:
-            try:
-                surveyConfigRead, mosaicConfigRead, utilsConfigRead, spectralConfigRead, \
-                spatialConfigRead = readConfig(self.logger, self.configfilename)
-            except(FileNotFound):
-                self.logger.critical("One or more needed files do not exist")
-                return
-            try:
-                surveyConfig = checkConfig(self.logger, surveyConfig, surveyConfigRead)
-            except(KeyError):
-                return
-            try:
-                mosaicConfig = checkConfig(self.logger, mosaicConfig, mosaicConfigRead)
-            except(KeyError):
-                return
-            try:
-                utilsConfig = checkConfig(self.logger, utilsConfig, utilsConfigRead)
-            except(KeyError):
-                return
-            try:
-                spectralConfig = checkConfig(self.logger, spectralConfig, spectralConfigRead)
-            except(KeyError):
-                return
-            try:
-                spatialConfig = checkConfig(self.logger, spatialConfig, spatialConfigRead)
-            except(KeyError):
-                return
+        self.helper = HelperConfig(survey_logger=self.logger)
+
+        surveyConfig = self.helper.get_survey_config()
+        mosaicConfig = self.helper.get_mosaic_config()
+        utilsConfig = self.helper.get_constants_config()
+        spectralConfig = self.helper.get_spectral_config()
+        spatialConfig = self.helper.get_spatial_config()
+
+        if config_file:
+             try:
+                 surveyConfigRead, mosaicConfigRead, utilsConfigRead, spectralConfigRead, \
+                 spatialConfigRead = self.helper.read_config(self.configfilename)
+             except FileNotFound:
+                 self.logger.critical("One or more needed files do not exist")
+                 return
+             try:
+                 surveyConfig = self.helper.check_config(surveyConfig, surveyConfigRead)
+             except KeyError:
+                 return
+             try:
+                 mosaicConfig = self.helper.check_config(mosaicConfig, mosaicConfigRead)
+             except KeyError:
+                 return
+             try:
+                 utilsConfig = self.helper.check_config(utilsConfig, utilsConfigRead)
+             except KeyError:
+                 return
+             try:
+                 spectralConfig = self.helper.check_config(spectralConfig, spectralConfigRead)
+             except KeyError:
+                 return
+             try:
+                 spatialConfig = self.helper.check_config(spatialConfig, spatialConfigRead)
+             except KeyError:
+                 return
 
         self.surveyConf = surveyConfig
         self.mosaicConf = mosaicConfig
@@ -103,15 +74,13 @@ class Survey:
         self.flag_existance = False
 
         self.ret = re.compile('\n')
-        Print(self.logger, self.surveyConf, 'survey')
+        self.helper.print(self.surveyConf, 'survey')
 
     def write_config(self):
         """
         Writes all of the initialization variables to the config file called <surveyname>.cfg.
         """
-        writeConfig(self.logger, surveyDictionary=self.surveyConf, mosaicDictionary=self.mosaicConf, \
-                    utilsDictionary=self.utilsConf, spectralDictionary=self.spectralConf,
-                    spatialDictionary=self.spatialConf)
+        self.helper.write_config(self.surveyConf, self.mosaicConf, self.utilsConf, self.spectralConf, self.spatialConf)
 
     def make_obs(self, type='brightness temperature'):
         """
@@ -380,15 +349,13 @@ def main():
             if opt in ('-n', '--surveyname'):
                 have_mosaic = True
                 survey_name = val
-
-        for opt, val in opts:
-            if opt in ('-h', '--help'):
+            elif opt in ('-h', '--help'):
                 print_cli_help()
                 return
             elif opt in ('-a', '--analyze'):
                 if not have_mosaic:
                     raise getopt.GetoptError("Must specify surveyname, printing help.")
-                mysurvey = Survey(survey_name, True)
+                Survey(survey_name, configFile=True)
                 print("Analysis start here!!")
                 return
             elif opt in ('-i', '--initialize'):
