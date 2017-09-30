@@ -2,6 +2,8 @@
 import os
 from configparser import RawConfigParser
 
+SURVEY_CONFIG_DIR = 'survey_config/'
+
 
 class FileNotFound:
     pass
@@ -22,14 +24,14 @@ class HelperConfig:
 
     def set_constants_config(self):
         self.constants_dict = {
-            'tcmb': 2.7,            # Cosmic Microwave Background temperature (K)
-            'tspin': 125.,          # Excitation or Spin temperature (K) - 125 standard, 150 Fermi
-            'xfactor': 1.9e20,      # CO Factor - Strong & Mattox (1996): X=NH2/Wco (K-1 cm-2 km-1 s)
-            'c': 1.823e18,          # Costant (cm-2)
-            'pc2cm': 3.08567758e18, # Conversion factor from pc to cm (cm)
+            'tcmb': 2.7,  # Cosmic Microwave Background temperature (K)
+            'tspin': 125.,  # Excitation or Spin temperature (K) - 125 standard, 150 Fermi
+            'xfactor': 1.9e20,  # CO Factor - Strong & Mattox (1996): X=NH2/Wco (K-1 cm-2 km-1 s)
+            'c': 1.823e18,  # Costant (cm-2)
+            'pc2cm': 3.08567758e18,  # Conversion factor from pc to cm (cm)
             'poverk': 4000.,
-            'p': 1.0,               # Fraction of HI emission originating behind the HISA cloud
-            'fn': 1.0               # Fraction of particle density contributed by the HISA gas, fn = n_hisa/n_tot
+            'p': 1.0,  # Fraction of HI emission originating behind the HISA cloud
+            'fn': 1.0  # Fraction of particle density contributed by the HISA gas, fn = n_hisa/n_tot
         }
 
     def set_survey_config(self, name='MySurvey', species='HI'):
@@ -50,37 +52,37 @@ class HelperConfig:
 
     def set_spectral_config(self):
         self.spectral_dict = {
-             'n_spectral': 7,           # size of box for spectral smoothing
-             'max_loops': 1000,         # maximum number of CLEAN iterations
-             'residual_frac': 0.03,     # residual fraction of smoothed for CLEAN cutoff
-             'clip_spectral': 0.8,      # fraction of r_max for adding to correction
-             'gain_spectral': 0.25,     # fraction of residual height added to correction
-             'fwhm_spectral': 8,        # FWHM of the Gaussian for CLEAN loop, in km/s
-             'hisa_f_spectral': -2.0,   # residual amplitude factor for potential HISA in spectral search
-             'temp_critical': 30.,      # brightness temperature threshold
-             'fit_narrow': 2.0,         # FWHM of Gaussian for narrow fit (km/s)
-             'fit_broad': 4.0,          # FWHM of Gaussian for broad fit (km/s)
-             'fit_qual': 2.0,           # Gaussian fit reliability cutoff
-             'dip_cut': 0.6,            # Cutoff for min morphological "dip" for spectral HISA
-             'fwhm_spatial_hisa': 5,    # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-             'min_hisa': 2.0            # cutoff for min HISA amplitude after spatial smoothing
+            'n_spectral': 7,  # size of box for spectral smoothing
+            'max_loops': 1000,  # maximum number of CLEAN iterations
+            'residual_frac': 0.03,  # residual fraction of smoothed for CLEAN cutoff
+            'clip_spectral': 0.8,  # fraction of r_max for adding to correction
+            'gain_spectral': 0.25,  # fraction of residual height added to correction
+            'fwhm_spectral': 8,  # FWHM of the Gaussian for CLEAN loop, in km/s
+            'hisa_f_spectral': -2.0,  # residual amplitude factor for potential HISA in spectral search
+            'temp_critical': 30.,  # brightness temperature threshold
+            'fit_narrow': 2.0,  # FWHM of Gaussian for narrow fit (km/s)
+            'fit_broad': 4.0,  # FWHM of Gaussian for broad fit (km/s)
+            'fit_qual': 2.0,  # Gaussian fit reliability cutoff
+            'dip_cut': 0.6,  # Cutoff for min morphological "dip" for spectral HISA
+            'fwhm_spatial_hisa': 5,  # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
+            'min_hisa': 2.0  # cutoff for min HISA amplitude after spatial smoothing
         }
 
     def set_spatial_config(self):
         self.spatial_dict = {
-            'n_spatial': 15,        # size of box for spatial smoothing
-            'max_loops': 1000,      # max number of loops for CLEAN algorithm
-            'high': 10,             # 10th (or Mth) highest peak in residual used as rmax
+            'n_spatial': 15,  # size of box for spatial smoothing
+            'max_loops': 1000,  # max number of loops for CLEAN algorithm
+            'high': 10,  # 10th (or Mth) highest peak in residual used as rmax
             'residual_frac': 0.03,  # fraction of max smoothed height for CLEAN loop cutoff
-            'clip_spatial': 0.5,    # fraction of r_max for adding to correction
-            'gain_spatial': 0.25,   # fraction of residual added to correction
-            'fwhm_spatial': 20,     # FWHM of gaussian for CLEAN, in arcmin
-            'noise_resolve': 20,    # angular resolution for calculation of sigma_obs, in minutes
+            'clip_spatial': 0.5,  # fraction of r_max for adding to correction
+            'gain_spatial': 0.25,  # fraction of residual added to correction
+            'fwhm_spatial': 20,  # FWHM of gaussian for CLEAN, in arcmin
+            'noise_resolve': 20,  # angular resolution for calculation of sigma_obs, in minutes
             'hisa_f_spatial': -2.,  # residual amplitude factor for potential HISA in spatial search
-            'temp_critical': 30.,   # min unabsorbed temperature for candidate HISA
-            'amp_min_first': 4.,    # cutoff amplitude for first HISA filter (pre-smoothing)
-            'fwhm_spatial_hisa': 5, # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-            'min_hisa': 2.          # cutoff for min HISA amplitude after spatial smoothing
+            'temp_critical': 30.,  # min unabsorbed temperature for candidate HISA
+            'amp_min_first': 4.,  # cutoff amplitude for first HISA filter (pre-smoothing)
+            'fwhm_spatial_hisa': 5,  # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
+            'min_hisa': 2.  # cutoff for min HISA amplitude after spatial smoothing
         }
 
     def get_constants_config(self):
@@ -103,10 +105,13 @@ class HelperConfig:
         self.set_spatial_config()
         return self.spatial_dict
 
-    def write_config(self, survey_dict=None, mosaic_dict=None, constants_dict=None, spectral_dict=None, spatial_dict=None):
+    def write_config(self, survey_dict=None, mosaic_dict=None, constants_dict=None, spectral_dict=None,
+                     spatial_dict=None):
         """
         Writes all of the needed information to the config file called <mosaicname>.cfg
         """
+        if not os.path.isdir(SURVEY_CONFIG_DIR):
+            os.makedirs(SURVEY_CONFIG_DIR)
         configfilename = survey_dict['survey'] + '_' + mosaic_dict['mosaic']
 
         config = RawConfigParser()
@@ -154,7 +159,7 @@ class HelperConfig:
                 config.set('spatialSearch', variable, value)
             self.logger.info("wrote spatialSearch config to " + configfilename + ".cfg.")
 
-        with open(configfilename + '.cfg', 'w') as configfile:
+        with open(SURVEY_CONFIG_DIR + configfilename + '.cfg', 'w') as configfile:
             config.write(configfile)
 
     def read_config(self, configfilename):
@@ -174,7 +179,7 @@ class HelperConfig:
             self.check_for_files([configfilename + ".cfg"])
             self.logger.info('Reading from config file (' + configfilename + '.cfg)')
             config = RawConfigParser()
-            config.read(configfilename + '.cfg')
+            config.read(SURVEY_CONFIG_DIR + configfilename + '.cfg')
 
             if config.has_section('survey'):
                 survey_dict = dict(config.items('survey'))
