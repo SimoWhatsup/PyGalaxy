@@ -27,49 +27,55 @@ class Survey:
     def __init__(self, survey='MySurvey', species='HI', mosaic='skymap', config_file=False):
 
         self.logger = init_logger(survey + '_' + mosaic + '_' + species + '_Analysis')
-        self.configfilename = 'config/' + survey + '_' + mosaic
+        self.configfilename = survey + '_' + mosaic
 
         self.helper = HelperConfig(survey_logger=self.logger)
 
-        surveyConfig = self.helper.get_survey_config(name=survey, species=species)
-        mosaicConfig = self.helper.get_mosaic_config(mosaic=mosaic)
-        utilsConfig = self.helper.get_constants_config()
-        spectralConfig = self.helper.get_spectral_config()
-        spatialConfig = self.helper.get_spatial_config()
+        survey_config = self.helper.get_survey_config(name=survey, species=species)
+        mosaic_config = self.helper.get_mosaic_config(mosaic=mosaic)
+        constants_config = self.helper.get_constants_config()
+        spectral_config = self.helper.get_spectral_config()
+        spatial_config = self.helper.get_spatial_config()
 
         if config_file:
-             try:
-                 surveyConfigRead, mosaicConfigRead, utilsConfigRead, spectralConfigRead, \
-                 spatialConfigRead = self.helper.read_config(self.configfilename)
-             except FileNotFound:
-                 self.logger.critical("One or more needed files do not exist")
-                 return
-             try:
-                 surveyConfig = self.helper.check_config(surveyConfig, surveyConfigRead)
-             except KeyError:
-                 return
-             try:
-                 mosaicConfig = self.helper.check_config(mosaicConfig, mosaicConfigRead)
-             except KeyError:
-                 return
-             try:
-                 utilsConfig = self.helper.check_config(utilsConfig, utilsConfigRead)
-             except KeyError:
-                 return
-             try:
-                 spectralConfig = self.helper.check_config(spectralConfig, spectralConfigRead)
-             except KeyError:
-                 return
-             try:
-                 spatialConfig = self.helper.check_config(spatialConfig, spatialConfigRead)
-             except KeyError:
-                 return
+            try:
+                config_read_dict = self.helper.read_config(self.configfilename)
 
-        self.surveyConf = surveyConfig
-        self.mosaicConf = mosaicConfig
-        self.utilsConf = utilsConfig
-        self.spectralConf = spectralConfig
-        self.spatialConf = spatialConfig
+                survey_config_read = config_read_dict.get('survey')
+                mosaic_config_read = config_read_dict.get('mosaic')
+                constants_config_read = config_read_dict.get('constants')
+                spectral_config_read = config_read_dict.get('spectral')
+                spatial_config_read = config_read_dict.get('spatial')
+
+            except FileNotFound:
+                self.logger.critical("One or more needed files do not exist")
+                return
+            try:
+                survey_config = self.helper.check_config(survey_config, survey_config_read)
+            except KeyError:
+                return
+            try:
+                mosaic_config = self.helper.check_config(mosaic_config, mosaic_config_read)
+            except KeyError:
+                return
+            try:
+                constants_config = self.helper.check_config(constants_config, constants_config_read)
+            except KeyError:
+                return
+            try:
+                spectral_config = self.helper.check_config(spectral_config, spectral_config_read)
+            except KeyError:
+                return
+            try:
+                spatial_config = self.helper.check_config(spatial_config, spatial_config_read)
+            except KeyError:
+                return
+
+        self.surveyConf = survey_config
+        self.mosaicConf = mosaic_config
+        self.utilsConf = constants_config
+        self.spectralConf = spectral_config
+        self.spatialConf = spatial_config
 
         self.flag_existance = False
 
@@ -343,7 +349,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hiamxcb:n:', ['help', 'analyze', 'initialize', 'surveyname', ])
         # Loop through first and check for the surveyname
-        have_mosaic = False
+        have_mosaic = True # False
         survey_name = 'example'
         for opt, val in opts:
             if opt in ('-n', '--surveyname'):
@@ -355,12 +361,12 @@ def main():
             elif opt in ('-a', '--analyze'):
                 if not have_mosaic:
                     raise getopt.GetoptError("Must specify surveyname, printing help.")
-                Survey(survey_name, configFile=True)
+                Survey(survey=survey_name, config_file=True)
                 print("Analysis start here!!")
                 return
             elif opt in ('-i', '--initialize'):
                 print("Creating example configuration file called example.cfg")
-                mysurvey = Survey(survey_name)
+                mysurvey = Survey(survey=survey_name)
                 mysurvey.write_config()
                 return
 

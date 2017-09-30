@@ -5,11 +5,11 @@ from configparser import RawConfigParser
 SURVEY_CONFIG_DIR = 'survey_config/'
 
 
-class FileNotFound:
+class FileNotFound(BaseException):
     pass
 
 
-class CommandNotFound:
+class CommandNotFound(BaseException):
     pass
 
 
@@ -176,7 +176,7 @@ class HelperConfig:
         spatial_dict = {}
 
         try:
-            self.check_for_files([configfilename + ".cfg"])
+            self.check_for_files([SURVEY_CONFIG_DIR + configfilename + ".cfg"])
             self.logger.info('Reading from config file (' + configfilename + '.cfg)')
             config = RawConfigParser()
             config.read(SURVEY_CONFIG_DIR + configfilename + '.cfg')
@@ -187,8 +187,8 @@ class HelperConfig:
             if config.has_section('mosaic'):
                 mosaic_dict = dict(config.items('mosaic'))
 
-            if config.has_section('utils'):
-                utils_dict = dict(config.items('utils'))
+            if config.has_section('constants'):
+                utils_dict = dict(config.items('constants'))
 
             if config.has_section('spectralSearch'):
                 spectral_dict = dict(config.items('spectralSearch'))
@@ -196,26 +196,33 @@ class HelperConfig:
             if config.has_section('spatialSearch'):
                 spatial_dict = dict(config.items('spatialSearch'))
 
-            return survey_dict, mosaic_dict, utils_dict, spectral_dict, spatial_dict
+            list_of_dict = {
+                'survey': survey_dict,
+                'mosaic': mosaic_dict,
+                'constants': utils_dict,
+                'spectral': spectral_dict,
+                'spatial': spatial_dict
+            }
+
+            return list_of_dict
 
         except FileNotFound:
             raise FileNotFound
 
-    def check_config(self, referenceDictionary, testDictionary):
+    def check_config(self, reference_dictionary, test_dictionary):
         """
         Checks a dictionary against a reference to make sure that all of the parameters are there.
         If all is good, it'll return the checked dictionary. If not, it'll return the reference dictionary
         and raise an exception.
         """
         try:
-            for key in referenceDictionary:
-                item = testDictionary[key]
-            return testDictionary
+            for key in reference_dictionary:
+                item = test_dictionary[key]
+            return test_dictionary
 
         except KeyError as inst:
-            self.logger.critical("Cannont find " + inst.args[0] + " in the config file.")
+            self.logger.critical("Cannot find " + inst.args[0] + " in the config file.")
             raise KeyError
-            return referenceDictionary
 
     def print_config(self, configfile, label):
         """
