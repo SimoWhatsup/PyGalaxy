@@ -1,5 +1,8 @@
 # coding=utf-8
+import os
 import logging
+
+LOG_OUT_DIR = 'log/'
 
 
 def init_logger(name):
@@ -8,11 +11,14 @@ def init_logger(name):
     :param name:
     :return:
     """
-    surveyLogger = logging.getLogger(name)
-    surveyLogger.setLevel(logging.DEBUG)
+    survey_logger = logging.getLogger(name)
+    survey_logger.setLevel(logging.DEBUG)
     # Prevents duplicate log entries after reinitialization.
-    if not surveyLogger.handlers:
-        fh = logging.FileHandler('log/' + name + '.log')
+    if not survey_logger.handlers:
+        if not os.path.isdir(LOG_OUT_DIR):
+            os.makedirs(LOG_OUT_DIR)
+
+        fh = logging.FileHandler(LOG_OUT_DIR + name + '.out')
         fh.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
@@ -20,7 +26,7 @@ def init_logger(name):
         formatter = logging.Formatter(FORMAT, datefmt="%y-%m-%d %H:%M:%S")
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
-        surveyLogger.addHandler(fh)
-        surveyLogger.addHandler(ch)
+        survey_logger.addHandler(fh)
+        survey_logger.addHandler(ch)
 
-    return surveyLogger
+    return survey_logger

@@ -212,7 +212,7 @@ class HelperConfig:
             raise KeyError
             return referenceDictionary
 
-    def print(self, configfile, label):
+    def print_config(self, configfile, label):
         """
         Prints out information about the various objects to the terminal and to the log file.
         """

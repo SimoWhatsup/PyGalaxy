@@ -74,7 +74,7 @@ class Survey:
         self.flag_existance = False
 
         self.ret = re.compile('\n')
-        self.helper.print(self.surveyConf, 'survey')
+        self.helper.print_config(self.surveyConf, 'survey')
 
     def write_config(self):
         """
