@@ -32,15 +32,15 @@ class HelperConfig:
             'fn': 1.0               # Fraction of particle density contributed by the HISA gas, fn = n_hisa/n_tot
         }
 
-    def set_survey_config(self):
+    def set_survey_config(self, name='MySurvey', species='HI'):
         self.survey_dict = {
-            'survey': 'MySurvey',
-            'species': 'HI'
+            'survey': name,
+            'species': species
         }
 
-    def set_mosaic_config(self):
+    def set_mosaic_config(self, mosaic='skymap'):
         self.mosaic_dict = {
-            'mosaic': 'skymap',
+            'mosaic': mosaic,
             'lon': None,
             'lat': None,
             'z1': None,
@@ -87,12 +87,12 @@ class HelperConfig:
         self.set_constants_config()
         return self.constants_dict
 
-    def get_survey_config(self):
-        self.set_survey_config()
+    def get_survey_config(self, name=None, species=None):
+        self.set_survey_config(name, species)
         return self.survey_dict
 
-    def get_mosaic_config(self):
-        self.set_mosaic_config()
+    def get_mosaic_config(self, mosaic=None):
+        self.set_mosaic_config(mosaic)
         return self.mosaic_dict
 
     def get_spectral_config(self):

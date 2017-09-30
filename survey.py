@@ -31,8 +31,8 @@ class Survey:
 
         self.helper = HelperConfig(survey_logger=self.logger)
 
-        surveyConfig = self.helper.get_survey_config()
-        mosaicConfig = self.helper.get_mosaic_config()
+        surveyConfig = self.helper.get_survey_config(name=survey, species=species)
+        mosaicConfig = self.helper.get_mosaic_config(mosaic=mosaic)
         utilsConfig = self.helper.get_constants_config()
         spectralConfig = self.helper.get_spectral_config()
         spatialConfig = self.helper.get_spatial_config()
