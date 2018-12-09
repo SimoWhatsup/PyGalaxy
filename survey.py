@@ -1,128 +1,87 @@
-#!/usr/bin/python
+# coding=utf-8
+import os
+import re
+import sys
+
+from helpers.helper_config import HelperConfig, FileNotFound, check_for_files
+from common.logger import get_logger
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from clean_mosaic import *
-from combine_mosaics import *
-from combine_surveys import *
-from deconvolve_mosaic import *
-from extraction_hisa import *
-from galprop_skymap import *
-from make_correction import *
-from make_mosaic import *
-from mosaic import *
-from split_mosaic import *
+from entity.mosaic import Mosaic
+# from clean_mosaic import *
+# from combine_mosaics import *
+# from combine_surveys import *
+# from deconvolve_mosaic import *
+# from extraction_hisa import *
+# from galprop_skymap import *
+from make_correction import MakeCorrection
+from make_mosaic import MakeMosaic
+# from split_mosaic import *
 
 
 class Survey:
-    def __init__(self, survey='MySurvey', species='HI', mosaic='skymap', configFile=False,
-                 surveyConfig={'survey': 'MySurvey', 'species': 'HI'},
-                 mosaicConfig={'mosaic': 'skymap', 'lon': 'INDEF', 'lat': 'INDEF', 'z1': 'INDEF', 'z2': 'INDEF',
-                               'side': 'INDEF'},
-                 utilsConfig={'tcmb': 2.7,  # Cosmic Microwave Background temperature (K)
-                              'tspin': 125.,  # Excitation or Spin temperature (K) - 125 standard, 150 Fermi
-                              'xfactor': 1.9e20,  # CO Factor - Strong & Mattox (1996): X=NH2/Wco (K-1 cm-2 km-1 s)
-                              'c': 1.823e18,  # Costant (cm-2)
-                              'pc2cm': 3.08567758e18,  # Conversion factor from pc to cm (cm)
-                              'poverk': 4000.,
-                              'p': 1.0,  # Fraction of HI emission originating behind the HISA cloud
-                              'fn': 1.0},  # Fraction of particle density contributed by the HISA gas, fn = n_hisa/n_tot
-                 spectralConfig={"n_spectral": 7,  # size of box for spectral smoothing
-                                 "max_loops": 1000,  # maximum number of CLEAN iterations
-                                 "residual_frac": 0.03,  # residual fraction of smoothed for CLEAN cutoff
-                                 "clip_spectral": 0.8,  # fraction of r_max for adding to correction
-                                 "gain_spectral": 0.25,  # fraction of residual height added to correction
-                                 "fwhm_spectral": 8,  # FWHM of the Gaussian for CLEAN loop, in km/s
-                                 "hisa_f_spectral": -2.0,
-                                 # residual amplitude factor for potential HISA in spectral search
-                                 "temp_critical": 30.,  # brightness temperature threshold
-                                 "fit_narrow": 2.0,  # FWHM of Gaussian for narrow fit (km/s)
-                                 "fit_broad": 4.0,  # FWHM of Gaussian for broad fit (km/s)
-                                 "fit_qual": 2.0,  # Gaussian fit reliability cutoff
-                                 "dip_cut": 0.6,  # Cutoff for min morphological "dip" for spectral HISA
-                                 "fwhm_spatial_hisa": 5,
-                                 # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-                                 "min_hisa": 2.0},  # cutoff for min HISA amplitude after spatial smoothing
-                 spatialConfig={"n_spatial": 15,  # size of box for spatial smoothing
-                                "max_loops": 1000,  # max number of loops for CLEAN algorithm
-                                "high": 10,  # 10th (or Mth) highest peak in residual used as rmax
-                                "residual_frac": 0.03,  # fraction of max smoothed height for CLEAN loop cutoff
-                                "clip_spatial": 0.5,  # fraction of r_max for adding to correction
-                                "gain_spatial": 0.25,  # fraction of residual added to correction
-                                "fwhm_spatial": 20,  # FWHM of gaussian for CLEAN, in arcmin
-                                "noise_resolve": 20,  # angular resolution for calculation of sigma_obs, in minutes
-                                "hisa_f_spatial": -2.,  # residual amplitude factor for potential HISA in spatial search
-                                "temp_critical": 30.,  # min unabsorbed temperature for candidate HISA
-                                "amp_min_first": 4.,  # cutoff amplitude for first HISA filter (pre-smoothing)
-                                "fwhm_spatial_hisa": 5,
-                                # FWHM of Gaussian for spatial smoothing of HISA, in units of pixels
-                                "min_hisa": 2.}):  # cutoff for min HISA amplitude after spatial smoothing
+    def __init__(self, survey='MySurvey', species='HI', mosaic='skymap', read_config=False):
 
-        surveyConfig['survey'] = survey
-        surveyConfig['species'] = species
-        mosaicConfig['mosaic'] = mosaic
+        self.logger = get_logger(survey + '_' + mosaic + '_' + species + '_Analysis')
+        self.configfilename = survey + '_' + mosaic
 
-        self.logger = initLogger(survey + '_' + mosaic + '_' + species + '_Analysis')
-        self.configfilename = 'config/' + survey + '_' + mosaic
+        self.helper = HelperConfig(name=survey, species=species, mosaic=mosaic)
 
-        if configFile:
+        survey_config = self.helper.survey_config
+        mosaic_config = self.helper.mosaic_config
+        constants_config = self.helper.constants_config
+        spectral_config = self.helper.spectral_config
+        spatial_config = self.helper.spatial_config
+
+        if read_config:
             try:
-                surveyConfigRead, mosaicConfigRead, utilsConfigRead, spectralConfigRead, \
-                spatialConfigRead = readConfig(self.logger, self.configfilename)
-            except(FileNotFound):
-                self.logger.critical("One or more needed files do not exist")
-                return
-            try:
-                surveyConfig = checkConfig(self.logger, surveyConfig, surveyConfigRead)
-            except(KeyError):
-                return
-            try:
-                mosaicConfig = checkConfig(self.logger, mosaicConfig, mosaicConfigRead)
-            except(KeyError):
-                return
-            try:
-                utilsConfig = checkConfig(self.logger, utilsConfig, utilsConfigRead)
-            except(KeyError):
-                return
-            try:
-                spectralConfig = checkConfig(self.logger, spectralConfig, spectralConfigRead)
-            except(KeyError):
-                return
-            try:
-                spatialConfig = checkConfig(self.logger, spatialConfig, spatialConfigRead)
-            except(KeyError):
+                config_read_dict = self.helper.read_config(self.configfilename)
+
+                survey_config_read = config_read_dict.get('survey')
+                mosaic_config_read = config_read_dict.get('mosaic')
+                constants_config_read = config_read_dict.get('constants')
+                spectral_config_read = config_read_dict.get('spectral')
+                spatial_config_read = config_read_dict.get('spatial')
+
+            except FileNotFound:
+                self.logger.error('One or more needed files do not exist')
                 return
 
-        self.surveyConf = surveyConfig
-        self.mosaicConf = mosaicConfig
-        self.utilsConf = utilsConfig
-        self.spectralConf = spectralConfig
-        self.spatialConf = spatialConfig
+            survey_config = self.helper.check_config(survey_config, survey_config_read)
+            mosaic_config = self.helper.check_config(mosaic_config, mosaic_config_read)
+            constants_config = self.helper.check_config(constants_config, constants_config_read)
+            spectral_config = self.helper.check_config(spectral_config, spectral_config_read)
+            spatial_config = self.helper.check_config(spatial_config, spatial_config_read)
+
+        self.survey_conf = survey_config
+        self.mosaic_conf = mosaic_config
+        self.utils_conf = constants_config
+        self.spectral_conf = spectral_config
+        self.spatial_conf = spatial_config
 
         self.flag_existance = False
 
         self.ret = re.compile('\n')
-        Print(self.logger, self.surveyConf, 'survey')
+        self.helper.print_config(self.survey_conf, 'survey')
 
     def write_config(self):
         """
         Writes all of the initialization variables to the config file called <surveyname>.cfg.
         """
-        writeConfig(self.logger, surveyDictionary=self.surveyConf, mosaicDictionary=self.mosaicConf, \
-                    utilsDictionary=self.utilsConf, spectralDictionary=self.spectralConf,
-                    spatialDictionary=self.spatialConf)
+        self.helper.write_config(self.survey_conf, self.mosaic_conf, self.utils_conf, self.spectral_conf, self.spatial_conf)
 
-    def make_obs(self, type='brightness temperature'):
+    def make_obs(self, mtype='brightness_temperature'):
         """
         Reads the header and gets the data
         """
         try:
-            self.obs = Mosaic(self.surveyConf, self.mosaicConf, type)
-            self.logger.info(self.ret.subn(', ', str(self.obs))[0])
+            self.mosaic = Mosaic(self.survey_conf, self.mosaic_conf, mtype)
+            self.logger.info(self.mosaic)
 
-        except(FileNotFound):
-            self.logger.critical("One or more needed files do not exist")
+        except FileNotFound:
+            self.logger.error('One or more needed files do not exist')
             return
 
     def clean_mosaic(self, scale_data=False):
@@ -142,35 +101,33 @@ class Survey:
             self.clean = CleanMosaic(self.mosaic, scale_data)
             self.logger.info(self.ret.subn(', ', str(self.clean))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             self.logger.critical("One or more needed files do not exist")
             return
 
     def generate_mosaic(self, species='HI'):
         """
         Generate CGPS-like mosaic.
-        Input parameters: species = 'HI'(default),'HISA'(only for CGPS),'HI+HISA'(only for CGPS),
+        Input parameters: species = 'HI'(default), 'HISA'(only for CGPS), 'HI+HISA'(only for CGPS),
         'CO' (Wco) (only for CGPS)
         Access mosaic's attributes through self.msc
         """
         try:
-            self.mosaic
             self.mosaic.species = species
         except AttributeError:
-            self.logger.critical("Obs object does not exist. Create it first with the 'makeObs' function.")
+            self.logger.error('Obs object does not exist. Create it first with the \'make_obs\' function.')
             return
 
         try:
-            self.msc = makeMosaic(self.mosaic, self.mosaicConf)
+            self.msc = MakeMosaic(self.mosaic, self.mosaic_conf)
             self.logger.info(self.ret.subn(', ', str(self.msc))[0])
             self.flag_existance = True
 
-        except(FileNotFound):
-            self.logger.critical("One or more needed files do not exist")
+        except FileNotFound:
+            self.logger.error('One or more needed files do not exist')
             return
 
-    # def loadMosaic(self,species='HI',type='brightness temperature'):
-    def load_mosaic(self, species='HI', type='brightness temperature', datatype='original', nmsc=1, totmsc=1,
+    def load_mosaic(self, species='HI', mtype='brightness_temperature', datatype='original', nmsc=1, totmsc=1,
                     mypath=None):
         """
         Load a mosaic.
@@ -183,11 +140,11 @@ class Survey:
         Access mosaic's attributes through self.mosaic
         """
         try:
-            self.mosaic = Mosaic(self.surveyConf, self.mosaicConf, type, species, datatype, nmsc, totmsc, mypath)
-            # self.mosaic = Mosaic(self.surveyConf,self.mosaicConf,type,species,load=True)
+            self.mosaic = Mosaic(self.survey_conf, self.mosaic_conf, mtype, species, datatype, nmsc, totmsc, mypath)
+            # self.mosaic = Mosaic(self.survey_conf,self.mosaic_conf,type,species,load=True)
             self.logger.info(self.ret.subn(', ', str(self.mosaic))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             return
 
     def get_galprop_map(self, resolution=1):
@@ -206,7 +163,7 @@ class Survey:
             self.galprop = GalpropSkymap(self.mosaic, resolution)
             self.logger.info(self.ret.subn(', ', str(self.galprop))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             return
 
     # spectral search needs to be implemented
@@ -222,10 +179,10 @@ class Survey:
             return
 
         try:
-            self.hisa = extractionHISA(self.mosaic, self.spatialConf, self.spectralConf, analysis)
+            self.hisa = extractionHISA(self.mosaic, self.spatial_conf, self.spectral_conf, analysis)
             self.logger.info(self.ret.subn(', ', str(self.hisa))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             self.logger.critical("One or more needed files do not exist")
             return
 
@@ -236,14 +193,13 @@ class Survey:
         Access mosaic's attributes through self.coldens
         """
         try:
-            self.mosaic
             self.mosaic.newspec = species
         except AttributeError:
             self.logger.critical(
                 "Mosaic object " + species + " does not exist. Create it first with the 'loadMap' function.")
             return
         try:
-            self.coldens = makeCorrection(self.mosaic, self.mosaicConf, self.utilsConf)
+            self.coldens = MakeCorrection(self.mosaic, self.mosaic_conf, self.utils_conf)
             self.logger.info(self.ret.subn(', ', str(self.coldens))[0])
 
         except FileNotFound:
@@ -251,9 +207,8 @@ class Survey:
             return
 
     def combine_mosaics(self, mosaic='skymap', species='HI', type='column density', dim='2D'):
-
         try:
-            self.skyregion = combineMosaics(self.surveyConf, mosaic, species, type, dim)
+            self.skyregion = combineMosaics(self.survey_conf, mosaic, species, type, dim)
             self.logger.info(self.ret.subn(', ', str(self.skyregion))[0])
 
         except FileNotFound:
@@ -273,7 +228,7 @@ class Survey:
     def make_plot(self, plot='NH vs Ts', l=0., b=0.):
 
         try:
-            self.data = plotNvsTs(self.logger, self.obs, self.utilsConf, plot, l, b)
+            self.data = plotNvsTs(self.logger, self.obs, self.utils_conf, plot, l, b)
             self.logger.info(self.ret.subn(', ', str(self.data))[0])
 
         except FileNotFound:
@@ -294,7 +249,7 @@ class Survey:
             return
 
         filename = self.mosaic.mosaicFile
-        checkForFiles(self.logger, [filename])
+        check_for_files([filename])
         self.logger.info('Removing file: ' + filename)
         os.remove(filename)
 
@@ -312,7 +267,7 @@ class Survey:
             self.split = splitMosaic(self.mosaic, num)
             self.logger.info(self.ret.subn(', ', str(self.split))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             self.logger.critical("One or more needed files do not exist")
 
     def deconvolve_mosaic(self, species='HI', rotcurve='Bissantz2003'):
@@ -324,17 +279,16 @@ class Survey:
         Access mosaic's attributes through self.decon
         """
         try:
-            self.mosaic
             self.mosaic.newspec = species
         except AttributeError:
             self.logger.critical(
                 "Mosaic object " + species + " does not exist. Load it first with the 'loadMap' function.")
             return
         try:
-            self.decon = deconvolveMosaic(self.mosaic, self.mosaicConf, self.utilsConf, rotcurve, scale_data=False)
+            self.decon = deconvolveMosaic(self.mosaic, self.mosaic_conf, self.utils_conf, rotcurve, scale_data=False)
             self.logger.info(self.ret.subn(', ', str(self.decon))[0])
 
-        except(FileNotFound):
+        except FileNotFound:
             return
 
 
@@ -374,26 +328,24 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hiamxcb:n:', ['help', 'analyze', 'initialize', 'surveyname', ])
         # Loop through first and check for the surveyname
-        have_mosaic = False
+        have_mosaic = True  # False
         survey_name = 'example'
         for opt, val in opts:
             if opt in ('-n', '--surveyname'):
                 have_mosaic = True
                 survey_name = val
-
-        for opt, val in opts:
-            if opt in ('-h', '--help'):
+            elif opt in ('-h', '--help'):
                 print_cli_help()
                 return
             elif opt in ('-a', '--analyze'):
                 if not have_mosaic:
                     raise getopt.GetoptError("Must specify surveyname, printing help.")
-                mysurvey = Survey(survey_name, True)
+                Survey(survey=survey_name, read_config=True)
                 print("Analysis start here!!")
                 return
             elif opt in ('-i', '--initialize'):
                 print("Creating example configuration file called example.cfg")
-                mysurvey = Survey(survey_name)
+                mysurvey = Survey(survey=survey_name)
                 mysurvey.write_config()
                 return
 

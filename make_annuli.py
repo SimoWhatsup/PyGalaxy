@@ -3,7 +3,7 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
 
 
 class makeAnnuli(object):
@@ -179,7 +179,7 @@ class makeAnnuli(object):
                     self.logger.info("1) Ts = %.2f K" % Ts)
                     self.logger.info("2) dV = %.2f km/s" % dv)
                     self.logger.info("3) Tb(min) = %.2f K, Tb(max) = %.2f K" % (amin(Tb), amax(Tb)))
-                    # self.logger.info("4) Tc(min) = %.2f K, Tc(max) = %.2f K"%(amin(Tc),amax(Tc)))
+                    # self.common.info("4) Tc(min) = %.2f K, Tc(max) = %.2f K"%(amin(Tc),amax(Tc)))
 
                     self.logger.info("Calculating NHI...")
                     # Optical depth correction

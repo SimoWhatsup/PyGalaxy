@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "fmt_file": {
+      "()": "common.logger.CustomFormatter",
+      "fmt": "[%(asctime)s] %(filename)s:%(lineno)s - %(levelname)s %(message)s",
+      "datefmt": "%y-%m-%d %H:%M:%S",
+      "use_color": false
+    },
+    "fmt_console": {
+      "()": "common.logger.CustomFormatter",
+      "fmt": "[%(asctime)s] %(filename)s:%(lineno)s - %(levelname)s %(message)s",
+      "datefmt": "%y-%m-%d %H:%M:%S",
+      "use_color": true
+    }
+  },
+  "handlers": {
+    "file_handler": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "formatter": "fmt_file",
+      "filename": "log.out",
+      "maxBytes": 10485760,
+      "backupCount": 20,
+      "encoding": "utf8"
+    },
+    "console_handler": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "fmt_console",
+      "stream": "ext://sys.stdout"
+    }
+  },
+  "loggers": {
+    "pal-bot": {
+      "level": "ERROR",
+      "handlers": [
+        "console_handler"
+      ],
+      "propagete": "no"
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": [
+      "file_handler",
+      "console_handler"
+    ]
+  }
+}

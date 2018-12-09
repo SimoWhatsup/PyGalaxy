@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from util import *
+from common.util import *
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'

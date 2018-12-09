@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from util import *
+from common.util import *
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
@@ -74,7 +74,7 @@ class testModule(object):
 
         self.logger.info("Calculating gas distribution...")
         path2 = getPath(self.logger, 'rotcurve_mpohl')
-        list = [self.species, vel, lat, lon, dv, path2, C, Ts, rmin, rmax]  # ,self.logger]
+        list = [self.species, vel, lat, lon, dv, path2, C, Ts, rmin, rmax]  # ,self.common]
 
         # Using Multiprocessing if enough cpus are available
         import multiprocessing

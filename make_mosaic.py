@@ -1,12 +1,16 @@
 #!/usr/bin/python
-from util import *
+import numpy as np
+from astropy.io import fits
+from common.util import get_mosaic_coordinate, get_path
+from helpers.helper_config import HelperConfig, check_for_files
+from common.logger import get_logger
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
 
-class makeMosaic(object):
-    def __init__(self, obs, mosaicConf):
+class MakeMosaic:
+    def __init__(self, obs, mosaic_conf):
         """
         Generate 'unabsorbed HI','HISA', and HI CGPS-like mosaics
         """
@@ -15,45 +19,44 @@ class makeMosaic(object):
         self.species = obs.species
         self.type = obs.type
 
-        self.logger = initLogger(self.survey + '_' + self.mosaic + '_' + self.species + '_GenerateMosaic')
-        path, flag = '', ''
+        self.logger = get_logger(self.survey + '_' + self.mosaic + '_' + self.species + '_GenerateMosaic')
+        self.helper = HelperConfig(self.survey, self.species, self.mosaic)
 
-        path = getPath(self.logger, key="lustre_%s_%s" % (self.survey.lower(), self.species.lower()))
+        path = get_path(key="lustre_%s_%s" % (self.survey.lower(), self.species.lower()))
         if self.species == 'HI+HISA':
-            path = getPath(self.logger, key='lustre_' + self.survey.lower() + '_hi')
+            path = get_path(key='lustre_' + self.survey.lower() + '_hi')
         if self.survey == 'Galprop':
-            self.mosaic = mosaicConf['mosaic']
+            self.mosaic = mosaic_conf['mosaic']
         if self.survey == 'Dame':
-            path = getPath(self.logger, key="lustre_dame")
-            self.mosaic = mosaicConf['mosaic']
+            path = get_path(key="lustre_dame")
+            self.mosaic = mosaic_conf['mosaic']
+
         flag = self.species + '_line.fits'
         if self.survey == 'LAB':
             flag = self.species + '_line_image.fits'
 
         file = path + self.survey + '_' + self.mosaic + '_' + flag
-        checkForFiles(self.logger, [file], existence=True)
+        check_for_files([file], existence=True)
         self.filename = file
 
-        self.logger.info("Getting the data from...")
-        self.logger.info("%s" % obs.filename)
+        self.logger.info('Getting the data from {}'.format(obs.filename))
 
-        if not (self.survey == 'CGPS' or self.survey == 'SGPS' or self.survey == 'VGPS'):
-
-            self.mosaic = mosaicConf['mosaic']
-            lon = mosaicConf['lon']  # deg
-            lat = mosaicConf['lat']  # deg
-            z1 = mosaicConf['z1']  # m/s or kpc
-            z2 = mosaicConf['z2']  # m/s or kpc
-            side = mosaicConf['side']
+        if self.survey not in ['CGPS', 'SGPS', 'VGPS']:
+            self.mosaic = mosaic_conf['mosaic']
+            lon = mosaic_conf['lon']  # deg
+            lat = mosaic_conf['lat']  # deg
+            z1 = mosaic_conf['z1']  # m/s or kpc
+            z2 = mosaic_conf['z2']  # m/s or kpc
+            side = mosaic_conf['side']
 
             if z1 == 'INDEF' and z2 == 'INDEF':
-                z1 = amin(obs.zarray)
-                z2 = amax(obs.zarray)
+                z1 = np.amin(obs.zarray)
+                z2 = np.amax(obs.zarray)
             else:
                 z1 = float(z1)
                 z2 = float(z2)
-            z1_px = int(ceil(obs.pz - 1. + (z1 - obs.z) / obs.dz))
-            z2_px = int(ceil(obs.pz - 1. + (z2 - obs.z) / obs.dz))
+            z1_px = int(np.ceil(obs.pz - 1. + (z1 - obs.z) / obs.dz))
+            z2_px = int(np.ceil(obs.pz - 1. + (z2 - obs.z) / obs.dz))
 
             if lon == 'INDEF' and lat == 'INDEF':
                 lon = obs.x
@@ -63,13 +66,13 @@ class makeMosaic(object):
                 lat = float(lat)  # deg
 
             if side == 'INDEF':
-                side = fabs(obs.nx * obs.dx)
+                side = np.fabs(obs.nx * obs.dx)
             else:
                 side = float(side) / 2.  # deg
 
-            l, b, sign = getMosaicCoordinate(self.logger, obs, self.survey, lon, lat, side)
+            l, b, sign = get_mosaic_coordinate(obs, self.survey, lon, lat, side)
 
-            if not self.survey == 'Dame':
+            if self.survey != 'Dame':
                 z = [z1_px, z2_px]
                 # Order indexes
                 if z1_px > z2_px:
@@ -86,7 +89,7 @@ class makeMosaic(object):
                 self.logger.info("- (v1,v2) = (%.3f,%.3f) m/s, [%s,%s] px" % (z1, z2, z[0], z[1]))
             self.logger.info("- (h0,w0) = (%s,%s) deg, [%s,%s] px" % (side, side, crpix1, crpix2))
 
-            if not self.survey == 'Dame':
+            if self.survey != 'Dame':
                 # The third axes can not be negative then I need to increase the index on the right z[1] by 1
                 # in order to match the size of the origianl axes
                 if z[0] == 0:
@@ -108,7 +111,7 @@ class makeMosaic(object):
                 obs.dy = sign[1] * obs.dy
 
             # Write new header
-            newheader = pyfits.Header()
+            newheader = fits.Header()
             newheader["ctype1"] = ("GLON-CAR", "Coordinate type")
             newheader["crval1"] = (lon, "Galactic longitude of reference pixel")
             newheader["crpix1"] = (crpix1, "Reference pixel of lon")
@@ -144,20 +147,18 @@ class makeMosaic(object):
 
             newheader["system"] = ("GALACTIC", "Coordinate system")
             newheader["equinox"] = (2000., "Equinox of ref. coord.")
-            newheader["datamin"] = (amin(newmosaic), "Min value")
-            newheader["datamax"] = (amax(newmosaic), "Max value")
+            newheader["datamin"] = (np.amin(newmosaic), "Min value")
+            newheader["datamax"] = (np.amax(newmosaic), "Max value")
             newheader["object"] = (self.survey + " Mosaic " + self.mosaic, self.survey + " Mosaic")
 
-            if self.survey == 'LAB' or self.survey == 'SGPS':
+            if self.survey in ['LAB', 'SGPS']:
                 newheader["band"] = (obs.keyword["band"], "Rest frequency in Hz")
 
-            results = pyfits.PrimaryHDU(newmosaic, newheader)
-
+            results = fits.PrimaryHDU(newmosaic, newheader)
         else:
-
             # Get emission data and velocity interval
             Tb = obs.observation[:, :, :, :]
-            dv = fabs(obs.dz / 1000.)  # [velocity] = km s-1
+            dv = np.fabs(obs.dz / 1000.)  # [velocity] = km s-1
             vel = obs.zarray / 1000.
             zmin = obs.zmin
             zmax = obs.zmax
@@ -166,14 +167,13 @@ class makeMosaic(object):
             del obs.observation
             del obs.zarray
 
-            if not self.species == 'CO':
-
+            if self.species != 'CO':
                 if self.species == 'HISA':
-                    Tb = zeros(Tb.shape, dtype=float32)
+                    Tb = np.zeros(Tb.shape, dtype=np.float32)
 
-                path_data = getPath(self.logger, key="%s_hisa_dat" % self.survey.lower())
+                path_data = get_path(key='{}_hisa_dat'.format(self.survey.lower()))
                 datafile = path_data + self.survey + '_' + self.mosaic + '_HISA.dat'
-                checkForFiles(self.logger, [datafile])
+                check_for_files([datafile])
                 input = open(datafile, "r")
                 lines = input.readlines()
 
@@ -194,38 +194,37 @@ class makeMosaic(object):
                     # k = ha-l*1024
                     # print m,l,k
 
-                    m = floor(nb / xdim / ydim)
+                    m = np.floor(nb / xdim / ydim)
                     ha = nb - m * xdim * ydim
-                    l = floor(ha / xdim)
+                    l = np.floor(ha / xdim)
                     k = ha - l * xdim
 
                     if self.species == 'HISA':
-                        Tb[0, m, l, k] = fabs(nd)
+                        Tb[0, m, l, k] = np.fabs(nd)
                     elif self.species == 'HI_unabsorbed':
                         Tb[0, m, l, k] = nc
                         # elif self.species == 'HI+HISA':
                         #	Tb[0,m,l,k] = nc + fabs(nd)
-
             else:
-                self.logger.error("This function can be only applied to HI_unabsorbed and HISA mosaics.")
+                self.logger.error('This function can be only applied to HI_unabsorbed and HISA mosaics.')
 
-            obs.keyword['datamin'] = amin(Tb)
-            obs.keyword['datamax'] = amax(Tb)
+            obs.keyword['datamin'] = np.amin(Tb)
+            obs.keyword['datamax'] = np.amax(Tb)
 
-            obs.keyword['minfil'] = unravel_index(argmin(Tb), Tb.shape)[1]
-            obs.keyword['mincol'] = unravel_index(argmin(Tb), Tb.shape)[2]
-            obs.keyword['minrow'] = unravel_index(argmin(Tb), Tb.shape)[3]
+            obs.keyword['minfil'] = np.unravel_index(np.argmin(Tb), Tb.shape)[1]
+            obs.keyword['mincol'] = np.unravel_index(np.argmin(Tb), Tb.shape)[2]
+            obs.keyword['minrow'] = np.unravel_index(np.argmin(Tb), Tb.shape)[3]
 
-            obs.keyword['maxfil'] = unravel_index(argmax(Tb), Tb.shape)[1]
-            obs.keyword['maxcol'] = unravel_index(argmax(Tb), Tb.shape)[2]
-            obs.keyword['maxrow'] = unravel_index(argmax(Tb), Tb.shape)[3]
+            obs.keyword['maxfil'] = np.unravel_index(np.argmax(Tb), Tb.shape)[1]
+            obs.keyword['maxcol'] = np.unravel_index(np.argmax(Tb), Tb.shape)[2]
+            obs.keyword['maxrow'] = np.unravel_index(np.argmax(Tb), Tb.shape)[3]
 
-            # results = pyfits.CompImageHDU(Tb[0],obs.keyword,'image')
-            results = pyfits.PrimaryHDU(Tb, obs.keyword)
+            # results = fits.CompImageHDU(Tb[0],obs.keyword,'image')
+            results = fits.PrimaryHDU(Tb, obs.keyword)
         # results.scale('int16', '', bscale=obs.bscale, bzero=obs.bzero)
 
         # Output file
-        self.logger.info("Writing data to a fits file in...")
+        self.logger.info('Writing data to a fits file in...')
         results.writeto(file, output_verify='fix')
-        self.logger.info("%s" % path)
-        self.logger.info("Done")
+        self.logger.info('{}'.format(path))
+        self.logger.info('Done')

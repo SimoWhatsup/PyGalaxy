@@ -3,7 +3,7 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
 
 
 class spectralAnalysis(object):
@@ -281,7 +281,7 @@ class spectralAnalysis(object):
                             # f2 = [60*ar+HISA_narrow,90*ar+HISA_broad,120*ar+HISA_merged]
                             # U(k),S(k),R(k),HISA_N,HISA_B,HISA_M
                             # plotFunc(steps,f1[1],f1[0],f1[3],f2[0],f2[1],f2[2],trh1,trh2)
-                            # self.logger.info("Done with (i,j) = (%s,%s) and counter %s"%(i+1,j+1,counter))
+                            # self.common.info("Done with (i,j) = (%s,%s) and counter %s"%(i+1,j+1,counter))
 
                 # Store HISA in result_array
                 result_array[:, j, i] = HISA_merged
