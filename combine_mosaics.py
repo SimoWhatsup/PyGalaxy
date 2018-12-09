@@ -3,7 +3,7 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
 
 
 class combineMosaics(object):
@@ -31,7 +31,7 @@ class combineMosaics(object):
         elif dim == '3D':
             flag2 = 'rings'
 
-        self.logger = initLogger(self.survey + '_' + self.mosaic + '_' + self.species + '_CombineMosaics')
+        self.logger = get_logger(self.survey + '_' + self.mosaic + '_' + self.species + '_CombineMosaics')
 
         if not type == glob_N:
             self.logger.critical("Allowed type is: '" + glob_N + "'. Your entry is: '" + self.type + "'.")

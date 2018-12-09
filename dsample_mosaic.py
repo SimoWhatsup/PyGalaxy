@@ -3,7 +3,7 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
 
 
 class dsampleMosaic(object):
@@ -17,7 +17,7 @@ class dsampleMosaic(object):
         self.species = obs.species
         self.type = obs.type
 
-        self.logger = initLogger(self.survey + '_' + self.mosaic + '_' + self.species + '_DownSample')
+        self.logger = get_logger(self.survey + '_' + self.mosaic + '_' + self.species + '_DownSample')
         path, flag = '', ''
 
         self.filename = obs.filename.split('.fits')[0] + '_lowres.fits'

@@ -3,7 +3,7 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
 
 
 class spatialAnalysis(object):
@@ -200,11 +200,11 @@ class spatialAnalysis(object):
             result_array[k, :, :] = fftconvolve(hisa_detected, gauss_spat_HISA, "same")
 
         # Do spatial smoothing of HISA
-        # self.logger.info("Spatial smoothing (convolution)...")
+        # self.common.info("Spatial smoothing (convolution)...")
         # for k in range(0,obs.msc_vel-1):
         #	result_array[k,:,:] = fftconvolve(result_array[k,:,:],gauss_spat_HISA,"same")
         #	if not k%10:
-        #		self.logger.info("- done with k = %s"%k)
+        #		self.common.info("- done with k = %s"%k)
 
         self.logger.info("Only take smoothed HISA > 2K...")
         # Turn results into a map with 1 where smoothed HISA > 2K and 0 everywhere else

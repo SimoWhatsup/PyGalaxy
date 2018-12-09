@@ -3,10 +3,11 @@
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
-from util import *
+from common.util import *
+from common.logger import get_logger
 
 
-class deconvolveMosaic(object):
+class deconvolveMosaic:
     def __init__(self, mosaic, mosaicConf, utilsConf, rotcurve, scale_data=False):
         """
         Calculate the column density in galacto-centric rings using the rotation curve of M. Phol et al.
@@ -20,7 +21,7 @@ class deconvolveMosaic(object):
         self.totmsc = mosaic.totmsc
         self.nmsc = mosaic.nmsc
 
-        self.logger = initLogger(self.survey + '_' + self.mosaic + '_' + self.species + '_Deconvolution')
+        self.logger = get_logger(self.survey + '_' + self.mosaic + '_' + self.species + '_Deconvolution')
         file, flag, units = '', '', ''
         sur = self.survey.lower()
         HI_all_OR = (self.species == 'HI' or self.species == 'HI_unabsorbed' or self.species == 'HISA')

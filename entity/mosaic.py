@@ -1,18 +1,17 @@
 #!/usr/bin/python
-from util import *
+import sys
+import numpy as np
+from astropy.io import fits
+from config import config
+from common.util import get_file
+from common.logger import get_logger
 
 __author__ = 'S. Federici (DESY)'
 __version__ = '0.1.0'
 
 
-try:
-    from SimpleDialog import SimpleDialog, map, Param
-except ImportError:
-    pass
-
-
-class Mosaic(object):
-    def __init__(self, surveyConf, mosaicConf, type, species, datatype, nmsc, totmsc, mypath):
+class Mosaic:
+    def __init__(self, survey_conf, mosaic_conf, mtype, species=None, datatype='original', nmsc=0, totmsc=0, path=None):
         """
         Read the fits file: HI, HISA, CO
         To check memory consumption:
@@ -20,34 +19,36 @@ class Mosaic(object):
             > def function():
             > ...
             > python -m memory_profiler script.py
-        :param surveyConf:
-        :param mosaicConf:
-        :param type:
+        :param survey_conf:
+        :param mosaic_conf:
+        :param mtype: default = brightness_temperature
         :param species:
         :param datatype:
         :param nmsc:
         :param totmsc:
-        :param mypath:
+        :param path:
         """
-        self.survey = surveyConf['survey']
-        self.mosaic = mosaicConf['mosaic']
-        self.type = type
-        self.species = species
-        if self.species == '':
-            self.species = surveyConf['species']
+        self.survey = survey_conf['survey']
+        self.species = species if species is not None else survey_conf['species']
+        self.mosaic = mosaic_conf['mosaic']
+
+        self.mosaic_slug = self.get_mosaic_slug()
+
+        self.logger = get_logger(self.mosaic_slug + '_mosaic')
+
+        self.type = mtype
         self.datatype = datatype
         self.nmsc = nmsc
         self.totmsc = totmsc
+        self.path = path
 
-        self.logger = initLogger(self.survey + '_' + self.mosaic + '_' + self.species + '_Mosaic')
-        self.filename, self.mosaic = getFile(self.logger, self.survey, self.mosaic, self.species, self.type,
-                                             self.datatype, nmsc, totmsc, mypath)
+        self.filename, self.mosaic = get_file(self.mosaic_slug, self.datatype, self.nmsc, self.totmsc, self.path)
 
-        checkForFiles(self.logger, [self.filename])
-        self.logger.info("%s" % self.filename)
+        # checkForFiles(self.logger, [self.filename])
+        self.logger.info('{}'.format(self.filename))
 
         # Open the file and set the variables
-        f = pyfits.open(self.filename)
+        f = fits.open(self.filename)
         self.keyword = f[0].header
 
         bscale_flag = False
@@ -67,8 +68,8 @@ class Mosaic(object):
             self.dx, self.dy = self.keyword['CDELT1'], self.keyword['CDELT2']
             self.px, self.py = self.keyword['CRPIX1'], self.keyword['CRPIX2']
             self.nx, self.ny = self.keyword['NAXIS1'], self.keyword['NAXIS2']
-            self.xarray = self.x + self.dx * (arange(self.nx) + 1. - self.px)
-            self.yarray = self.y + self.dy * (arange(self.ny) + 1. - self.py)
+            self.xarray = self.x + self.dx * (np.arange(self.nx) + 1. - self.px)
+            self.yarray = self.y + self.dy * (np.arange(self.ny) + 1. - self.py)
         except:
             self.logger.critical("Some keyword missing. Coordinate arrays cannot be built.")
 
@@ -98,7 +99,7 @@ class Mosaic(object):
                 self.dz = self.keyword['CDELT3']
                 self.pz = self.keyword['CRPIX3']
                 self.nz = self.keyword['NAXIS3']
-                self.zarray = self.z + self.dz * (arange(self.nz) + 1. - self.pz)
+                self.zarray = self.z + self.dz * (np.arange(self.nz) + 1. - self.pz)
             except:
                 self.logger.critical("Some keyword missing. 3rd axis array cannot be built.")
 
@@ -106,14 +107,14 @@ class Mosaic(object):
         # free memory
         del f[0]
 
-        self.observation = self.observation.astype(float32)
+        self.observation = self.observation.astype(np.float32)
 
         self.zmin = 1
         self.zmax = self.nz
 
-        if self.type == glob_Tb or self.type == glob_ITb:
+        if self.type in [config.TB, config.ITB]:
             self.observation[self.observation < -1e4] = 0.
-            self.observation[isnan(self.observation)] = 0.
+            self.observation[np.isnan(self.observation)] = 0.
             if self.keyword['NAXIS'] > 3:
                 if self.survey == 'CGPS':
                     if 'BAND' in self.keyword:
@@ -131,11 +132,16 @@ class Mosaic(object):
                     self.zmin = 1
                     self.zmax = 410
 
-        self.mosaic = mosaicConf['mosaic']
-        if not load:
-            self._inputs = 'Created ' + self.survey + ' Mosaic object ' + self.species + ' ' + self.type
-        else:
-            self._inputs = 'Loaded ' + self.survey + ' Mosaic object ' + self.species + ' ' + self.type
+        self.mosaic = mosaic_conf['mosaic']
+        #if not load:
+        #    self._inputs = 'Created ' + self.survey + ' Mosaic object ' + self.species + ' ' + self.type
+        #else:
+        self._inputs = 'Loaded ' + self.survey + ' Mosaic object ' + self.species + ' ' + self.type
+
+    def get_mosaic_slug(self):
+        return '{}.{}.{}'.format(self.survey.lower(),
+                                 self.species.lower(),
+                                 self.mosaic.lower())
 
     def __repr__(self):
         return self._inputs

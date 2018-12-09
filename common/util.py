@@ -7,10 +7,17 @@ __version__ = '0.1.0'
 # lmfit info: http://newville.github.com/lmfit-py/index.html
 # from lmfit import minimize, Parameters
 # from lmfit.printfuncs import *
-from numpy import *
+import os
+import sys
+import numpy as np
 from scipy import ndimage
 from scipy.optimize import fsolve
 from scipy.signal import fftconvolve
+from config import config
+from helpers.helper_config import FileNotFound
+from common.logger import get_logger
+
+logger = get_logger()
 
 # Avoid math module because of conflicts with 
 # functions in numpy (math module operates in 
@@ -21,7 +28,7 @@ from scipy.signal import fftconvolve
 #################################################
 # GLOBAL VARIABLES
 #################################################
-glob_Tb = 'brightness temperature'
+glob_Tb = config.TB #'brightness temperature'
 glob_ITb = 'integrated brightness temperature'
 glob_N = 'column density'
 glob_ncpu = 14
@@ -31,7 +38,7 @@ glob_annuli = 'Galprop'  # Ackermann2012:Galprop
 #################################################
 #	START GENERAL FUNCTIONS
 #################################################
-def getMosaicCoordinate(surveyLogger, obs, survey, lon, lat, side):
+def get_mosaic_coordinate(obs, survey, lon, lat, side):
     """
     This function allows to generate 'mosaics' like those
     defined in CGPS, SGPS, and VGPS.
@@ -66,15 +73,15 @@ def getMosaicCoordinate(surveyLogger, obs, survey, lon, lat, side):
     lat_min = min(lat1, lat2)
 
     # It needs adjustments!!
-    if 0:  # not survey == 'Galprop':
-        if lon_max > obj_lon_max or lon_min < obj_lon_min:
-            surveyLogger.critical("The longitude within the .cfg file")
-            surveyLogger.critical("doesn't match that of the mosaic!")
-            sys.exit(0)
-        if lat_max > obj_lat_max or lat_min < obj_lat_min:
-            surveyLogger.critical("The latitude within the .cfg file")
-            surveyLogger.critical("doesn't match that of the mosaic!")
-            sys.exit(0)
+    # if 0:  # not survey == 'Galprop':
+    #     if lon_max > obj_lon_max or lon_min < obj_lon_min:
+    #         surveyLogger.critical("The longitude within the .cfg file")
+    #         surveyLogger.critical("doesn't match that of the mosaic!")
+    #         sys.exit(0)
+    #     if lat_max > obj_lat_max or lat_min < obj_lat_min:
+    #         surveyLogger.critical("The latitude within the .cfg file")
+    #         surveyLogger.critical("doesn't match that of the mosaic!")
+    #         sys.exit(0)
 
     l1 = int(round(obs.px + (lon1 - obs.x) / obs.dx))
     l2 = int(round(obs.px + (lon2 - obs.x) / obs.dx))
@@ -85,20 +92,22 @@ def getMosaicCoordinate(surveyLogger, obs, survey, lon, lat, side):
     b = [b1, b2]
 
     # Get the sign of delta_l and delta_b
-    lsign = int((l[1] - l[0]) / fabs(l[1] - l[0]))
-    bsign = int((b[1] - b[0]) / fabs(b[1] - b[0]))
+    lsign = int((l[1] - l[0]) / np.fabs(l[1] - l[0]))
+    bsign = int((b[1] - b[0]) / np.fabs(b[1] - b[0]))
     sign = [lsign, bsign]
 
     # Order the indexes
     if l1 > l2: l = [l2, l1]
     if b1 > b2: b = [b2, b1]
 
-    length = rint(side / fabs(obs.dy) * 2)
+    length = np.rint(side / np.fabs(obs.dy) * 2)
 
     # Make an equal sides (Lx=Ly) mosaic
     if length % 2 == 0: length = length + 1
-    if (l[1] - l[0]) < length: l[0] = l[0] - 1
-    if (b[1] - b[0]) < length: b[0] = b[0] - 1
+    if (l[1] - l[0]) < length:
+        l[0] = l[0] - 1
+    if (b[1] - b[0]) < length:
+        b[0] = b[0] - 1
 
     return l, b, sign
 
@@ -106,104 +115,102 @@ def getMosaicCoordinate(surveyLogger, obs, survey, lon, lat, side):
 #################################################
 #	START CONVERTING FUNCTIONS
 #################################################
-def ga2equ(lon, lat, ref='J2000'):
-    """
-    Convert Galactic to Equatorial coordinates (J2000.0)
-    Input: [l,b] in decimal degrees
-    Returns: [ra,dec] in decimal degrees
-    Source:
-    - Book: "Practical astronomy with your calculator" (Peter Duffett-Smith)
-    - Wikipedia "Galactic coordinates"
-    Tests (examples given on the Wikipedia page):
-    >>> ga2equ([0.0, 0.0]).round(3)
-    array([ 266.405, -28.936])
-    >>> ga2equ([359.9443056, -0.0461944444]).round(3)
-    array([ 266.417, -29.008])
-    """
-    l = radians(lon)  # == ga*pi/180.
-    b = radians(lat)
+class Converter:
+    def ga2equ(self, lon, lat, ref='J2000'):
+        """
+        Convert Galactic to Equatorial coordinates (J2000.0)
+        Input: [l, b] in decimal degrees
+        Returns: [ra, dec] in decimal degrees
+        Source:
+        - Book: "Practical astronomy with your calculator" (Peter Duffett-Smith)
+        - Wikipedia "Galactic coordinates"
+        Tests (examples given on the Wikipedia page):
+        > ga2equ([0.0, 0.0]).round(3)
+        array([ 266.405, -28.936])
+        > ga2equ([359.9443056, -0.0461944444]).round(3)
+        array([ 266.417, -29.008])
+        """
+        l = np.radians(lon)  # == ga*pi/180.
+        b = np.radians(lat)
 
-    if ref == 'J2000':
-        # North galactic pole (J2000)
-        pole_ra = radians(192.859508)
-        pole_dec = radians(27.128336)
-        posangle = radians(122.932 - 90.0)
-    if ref == 'B1950':
-        # North galactic pole (B1950)
-        pole_ra = radians(192.25)
-        pole_dec = radians(27.4)
-        posangle = radians(123.0 - 90.0)
+        if ref == 'J2000':
+            # North galactic pole (J2000)
+            pole_ra = np.radians(192.859508)
+            pole_dec = np.radians(27.128336)
+            posangle = np.radians(122.932 - 90.0)
+        if ref == 'B1950':
+            # North galactic pole (B1950)
+            pole_ra = np.radians(192.25)
+            pole_dec = np.radians(27.4)
+            posangle = np.radians(123.0 - 90.0)
 
-    y = (cos(b) * cos(l - posangle))
-    x = (sin(b) * cos(pole_dec) - cos(b) * sin(pole_dec) * sin(l - posangle))
+        y = (np.cos(b) * np.cos(l - posangle))
+        x = (np.sin(b) * np.cos(pole_dec) - np.cos(b) * np.sin(pole_dec) * np.sin(l - posangle))
 
-    ra_rad = atan2(y, x) + pole_ra
-    dec_rad = asin(cos(b) * cos(pole_dec) * sin(l - posangle) + sin(b) * sin(pole_dec))
+        ra_rad = np.atan2(y, x) + pole_ra
+        dec_rad = np.asin(np.cos(b) * np.cos(pole_dec) * np.sin(l - posangle) + np.sin(b) * np.sin(pole_dec))
 
-    ra_deg = degrees(ra_rad) - 360 * int(degrees(ra_rad) / 360)
-    dec_deg = degrees(dec_rad)
+        ra_deg = np.degrees(ra_rad) - 360 * int(np.degrees(ra_rad) / 360)
+        dec_deg = np.degrees(dec_rad)
 
-    return ra_deg, dec_deg
+        return ra_deg, dec_deg
 
+    def eq2gal(self, ra, dec, ref='J2000'):
+        """
+        Convert Equatorial to Galactic coordinates (J2000.0/B1950)
+        Input: [l, b] in decimal degrees
+        Returns: [ra, dec] in decimal degrees
+        """
+        ra = np.radians(ra)
+        dec = np.radians(dec)
 
-def eq2gal(ra, dec, ref='J2000'):
-    """
-    Convert Equatorial to Galactic coordinates (J2000.0/B1950)
-    Input: [l,b] in decimal degrees
-    Returns: [ra,dec] in decimal degrees
-    """
-    ra = radians(ra)
-    dec = radians(dec)
+        if ref == 'J2000':
+            # North galactic pole (J2000)
+            pole_ra = np.radians(192.859508)
+            pole_dec = np.radians(27.128336)
+            posangle = np.radians(122.932 - 90.0)
+        if ref == 'B1950':
+            # North galactic pole (B1950)
+            pole_ra = np.radians(192.25)
+            pole_dec = np.radians(27.4)
+            posangle = np.radians(123.0 - 90.0)
 
-    if ref == 'J2000':
-        # North galactic pole (J2000)
-        pole_ra = radians(192.859508)
-        pole_dec = radians(27.128336)
-        posangle = radians(122.932 - 90.0)
-    if ref == 'B1950':
-        # North galactic pole (B1950)
-        pole_ra = radians(192.25)
-        pole_dec = radians(27.4)
-        posangle = radians(123.0 - 90.0)
+        b = np.asin(np.cos(dec) * np.cos(pole_dec) * np.cos(ra - pole_ra) + np.sin(dec) * np.sin(pole_dec))
 
-    b = asin(cos(dec) * cos(pole_dec) * cos(ra - pole_ra) + sin(dec) * sin(pole_dec))
+        A = np.sin(dec) - np.sin(b) * np.sin(pole_dec)
+        B = np.cos(dec) * np.sin(ra - pole_ra) * np.cos(pole_dec)
+        l = np.atan2(A, B) + posangle
 
-    A = sin(dec) - sin(b) * sin(pole_dec)
-    B = cos(dec) * sin(ra - pole_ra) * cos(pole_dec)
-    l = atan2(A, B) + posangle
+        return np.degrees(l), np.degrees(b)
 
-    return degrees(l), degrees(b)
+    def sex2dec(self, deg, min, sec):
+        """
+        Convert from sexagesimal (i.e., 182 deg 31'27'') to decimal degrees (i.e., 182.524167 deg)
+        """
+        A = np.fabs(sec / 60.)
+        B = (np.fabs(min) + A) / 60.
+        newdeg = np.fabs(deg) + B
+        if deg < 0. or min < 0. or sec < 0.:
+            newdeg = -1 * newdeg
+        return newdeg
 
+    def dec2sex(self, deg):
+        """
+        Convert from decimal (i.e., 182.524167 deg) to sexagesimal degrees, minutes, seconds (i.e., 182 deg 31'27'')
+        """
+        A = np.fabs(deg)  # unsigned decimal
+        B = A * 3600  # total seconds
+        C = round((B % 60.), 2)  # seconds (2 dp)
+        if C == 60.:
+            sec = 0.  # corrected seconds
+            D = B + 60.  # corrected remainder
+        else:
+            sec = C
+            D = B
+        min = int(D / 60.) % 60.  # minutes
+        newdeg = (deg / A) * int(D / 3600.)  # signed degrees
 
-def sex2dec(deg, min, sec):
-    """
-    Convert from sexagesimal (i.e., 182 deg 31'27'') to decimal degrees (i.e., 182.524167 deg)
-    """
-    A = fabs(sec / 60.)
-    B = (fabs(min) + A) / 60.
-    newdeg = (fabs(deg) + B)
-    if deg < 0. or min < 0. or sec < 0.:
-        newdeg = -1 * newdeg
-    return newdeg
-
-
-def dec2sex(deg):
-    """
-    Convert from decimal (i.e., 182.524167 deg) to sexagesimal degrees, minutes, seconds (i.e., 182 deg 31'27'')
-    """
-    A = fabs(deg)  # unsigned decimal
-    B = A * 3600  # total seconds
-    C = round((B % 60.), 2)  # seconds (2 dp)
-    if C == 60.:
-        sec = 0.  # corrected seconds
-        D = B + 60.  # corrected remainder
-    else:
-        sec = C
-        D = B
-    min = int(D / 60.) % 60.  # minutes
-    newdeg = (deg / A) * int(D / 3600.)  # signed degrees
-
-    return int(newdeg), int(min), int(sec)
+        return int(newdeg), int(min), int(sec)
 
 
 #################################################
@@ -212,28 +219,28 @@ def dec2sex(deg):
 
 def get_nth_maxvalue(a, nth):
     b = a.flatten()
-    res_sort = sort(b)
+    res_sort = np.sort(b)
     c = res_sort[-nth:]
     return c[0]
 
 
 def get_nth_minvalue(a, nth):
     b = a.flatten()
-    res_sort = sort(b)
+    res_sort = np.sort(b)
     c = res_sort[nth:]
     return c[0]
 
 
 def getSign(number, string=False):
     if string:
-        Nsign = int(number / fabs(number))
-        Ssign = ('%s' % Nsign).split('1')[0]
-        if Ssign == '':
+        n_sign = int(number / np.fabs(number))
+        s_sign = '{}'.format(n_sign).split('1')[0]
+        if s_sign == '':
             return '+'
-        elif Ssign == '-':
+        elif s_sign == '-':
             return ''
     else:
-        return int(number / fabs(number))
+        return int(number / np.fabs(number))
 
 
 def test(func):
@@ -245,15 +252,15 @@ def test(func):
 
 
 def movingaverage1D(array, w):
-    window = ones(w, dtype=int) / float(w)
+    window = np.ones(w, dtype=int) / float(w)
     return fftconvolve(array, window, 'same')
 
 
 def spatialAverage1D(array, i, j, n_spec):  # 7px
     # smoothing with spatial average
-    box_size = fix(n_spec / 2)  # 3
+    box_size = np.fix(n_spec / 2)  # 3
     s = array.shape[0]
-    smoothed = zeros(s, dtype=float)
+    smoothed = np.zeros(s, dtype=np.float)
 
     if i < box_size or j < box_size:
         for k in range(18, s - 1):
@@ -264,7 +271,7 @@ def spatialAverage1D(array, i, j, n_spec):  # 7px
             j2 = (j + box_size)
             i1 = (i - box_size) - 1
             i2 = (i + box_size)
-            smoothed[k] = mean(array[k, j1:j2, i1:i2])
+            smoothed[k] = np.mean(array[k, j1:j2, i1:i2])
         # print "(%i, %i) [%i,%i:%i,%i:%i] mean = %f" %(j,i,k,j1,j2,i1,i2,smoothed[k])
         # print array[k,j1:j2,i1:i2].shape
     return smoothed
@@ -286,11 +293,11 @@ def moment_mask(surveyLogger, T, zmax, dx, dv):
     rms_t = getRMS(surveyLogger, T, zmax)
 
     # Degrading the resolution spatially and in velocity by a factor of 2
-    fwhm_s = fabs(dx) * 2  # px
-    fwhm_v = fabs(dv) * 2
+    fwhm_s = np.fabs(dx) * 2  # px
+    fwhm_v = np.fabs(dv) * 2
 
-    sig_s = fwhm_s / sqrt(8 * log(2))
-    sig_v = fwhm_v / sqrt(8 * log(2))
+    sig_s = fwhm_s / np.sqrt(8 * np.log(2))
+    sig_v = fwhm_v / np.sqrt(8 * np.log(2))
     Tsmooth = ndimage.gaussian_filter(T, sigma=(sig_v, sig_s, sig_s), order=(0, 0, 0))
 
     # Calculate the rms for smoothed data
@@ -300,10 +307,10 @@ def moment_mask(surveyLogger, T, zmax, dx, dv):
     Tclipping = 5 * rms_ts
 
     # Generate a masking cube initially filled with zeros with the same dimensions as Tb
-    Mask = zeros(Tsmooth.shape)
+    Mask = np.zeros(Tsmooth.shape)
 
     # Unmask the pixel with a value > Tclipping
-    index = where(Tsmooth > Tclipping)
+    index = np.where(Tsmooth > Tclipping)
     Mask[index] = 1
 
     # Calculate the moment-masked cube
@@ -318,11 +325,11 @@ def getRMS(surveyLogger, T, zmax):
     '''
     # Compute the standard deviation along the specified axis:
     # std = sqrt(mean(abs(x - x.mean())**2))
-    sigma_array = zeros(3, dtype=float)
-    sigma_array[0] = sqrt(mean(T[zmax - 15, :, :] ** 2))  # std(T[235,:,:])
-    sigma_array[1] = sqrt(mean(T[zmax - 10, :, :] ** 2))  # std(T[240,:,:])
-    sigma_array[2] = sqrt(mean(T[zmax - 5, :, :] ** 2))  # std(T[245,:,:])
-    rms = amin(sigma_array)
+    sigma_array = np.zeros(3, dtype=np.float)
+    sigma_array[0] = np.sqrt(np.mean(T[zmax - 15, :, :] ** 2))  # std(T[235,:,:])
+    sigma_array[1] = np.sqrt(np.mean(T[zmax - 10, :, :] ** 2))  # std(T[240,:,:])
+    sigma_array[2] = np.sqrt(np.mean(T[zmax - 5, :, :] ** 2))  # std(T[245,:,:])
+    rms = np.amin(sigma_array)
 
     surveyLogger.info("RMS = %s" % rms)
     return rms
@@ -1666,7 +1673,6 @@ def Deconvolution(Tb, Tcont, Tunab, coord, vec):
                     # elif cnt_delta > 0:
                     #	igalactic_rad = argsort(delta_v_list[])
 
-
                     # The line signal is distributed among n=sol solutions with weights
                     if (cnt_ivgood == 0):
                         roots = sol
@@ -2156,7 +2162,7 @@ def spatialSearch(T, vec):
         # result[k,:,:] = fftconvolve(hisa_detected,gauss_spat_HISA,"same")
         result[k, :, :] = ndimage.gaussian_filter(hisa_detected, sigma=(sigma_spat_HISA, sigma_spat_HISA), order=(0, 0))
 
-    # self.logger.info("Only take smoothed HISA > 2K...")
+    # self.common.info("Only take smoothed HISA > 2K...")
     ## Turn results into a map with 1 where smoothed HISA > 2K and 0 everywhere else
     result[result < MIN_HISA] = 0.
 
@@ -2381,7 +2387,7 @@ def spectralSearch(T, vec):
                 count_start = counter
                 counter += 1
                 while (counter < cnt1 and (suspected_hisa_index[0][counter] - 1) == suspected_hisa_index[0][
-                        counter - 1]):
+                    counter - 1]):
                     segments.append(residual[suspected_hisa_index[0][counter]])
                     if (segments[counter - count_start] < segments[ikmin[1]]):
                         ikmin = [suspected_hisa_index[0][counter], counter - count_start]
@@ -2485,7 +2491,7 @@ def spectralSearch(T, vec):
     for k in xrange(nz):
         result[k, :, :] = fftconvolve(result[k, :, :], gauss_HISA, "same")
 
-    # self.logger.info("Only take smoothed HISA > 2K...")
+    # self.common.info("Only take smoothed HISA > 2K...")
     # Turn results into a map with 1 where smoothed HISA > 2K and 0 everywhere else
     result[result < MIN_HISA] = 0.
 
@@ -2770,12 +2776,22 @@ def getPath2(surveyLogger, key='', mode="DESY"):
     #	return '/lustre/fs4/group/that/sf/Surveys/'+survey+'/CO/col_den/'
 
 
-def getPath(surveyLogger, key="cgps_hi"):
-    mode = "DESY"
-    # mode = "HOME"
-    # mode = "BATCH"
+def get_path(key='cgps_hi'):
+    """
+    :param key: format 'survey_species' (e.g., 'cgps_hi')
+    :return:
+    """
+    # remote_location = "DESY"
+    # remote_location = "HOME"
+    remote_location = 'HOME2'
+    # remote_location = "BATCH"
 
-    if mode == "DESY":
+    disk1 = ''
+    disk2 = ''
+    data1 = ''
+    result1 = ''
+    workdir = ''
+    if remote_location == "DESY":
         disk1 = "/afs/ifh.de/group/that"
         disk2 = "/lustre/fs4/group/that/sf/Surveys"
 
@@ -2784,7 +2800,7 @@ def getPath(surveyLogger, key="cgps_hi"):
 
         workdir = disk1 + "/work-sf/survey"
 
-    elif mode == "HOME":
+    elif remote_location == "HOME":
         disk1 = "/Volumes/My Book/DESY"
         disk2 = disk1 + "/analysis/survey/results"
 
@@ -2793,7 +2809,16 @@ def getPath(surveyLogger, key="cgps_hi"):
 
         workdir = disk1 + "/analysis/survey"
 
-    elif mode == "BATCH":
+    elif remote_location == "HOME2":
+        disk1 = "/Users/simone/Documents/Projects/GitHub/surveys"
+        disk2 = disk1 + "/analysis/results"
+
+        data1 = disk1 + "/data/Radio"
+        result1 = data1 + "/hisa"
+
+        workdir = disk1 + "/analysis/survey"
+
+    elif remote_location == "BATCH":
         disk1 = "."  # "$TMPDIR"
         disk2 = disk1 + "/results"
 
@@ -3044,17 +3069,18 @@ def getPath(surveyLogger, key="cgps_hi"):
         path = True
         return disk2 + '/VGPS/HISA/col_den/'
 
-    if (not path):
-        surveyLogger.critical("Path '%s' doesn't exist." % key)
+    if not path:
+        logger.error('Path {} does not exist.'.format(key))
         raise FileNotFound
 
 
-def getFile(surveyLogger, survey, mosaic, species, type, datatype, nmsc, totmsc, mypath):
+def get_file(mosaic_slug, datatype, nmsc=0, totmsc=0, mypath=None):
     # Select the file according to Survey and Mosaic
     path = ''
     flag = ''
-    sur = survey.lower()
-    spec = species.lower()
+    survey = mosaic_slug.split('.')[0]
+    species = mosaic_slug.split('.')[1]
+    mosaic = mosaic_slug.split('.')[2]
     nmsc = int(nmsc)
     totmsc = int(totmsc)
 
@@ -3073,145 +3099,141 @@ def getFile(surveyLogger, survey, mosaic, species, type, datatype, nmsc, totmsc,
     # elif datatype == 'split':
     #	path = getPath(surveyLogger, key='lustre_'+sur+'_'+spec+'_split')
 
-
     # GALPROP
-    if survey == 'Galprop':
-        if species == 'HI':
+    if survey == 'galprop':
+        if species == 'hi':
             if datatype == 'original':
-                path = getPath(surveyLogger, key=sur + '_hi')
-                mosaic = 'TOT'
+                path = get_path(key='{}_{}'.format(survey, species))
+                mosaic = 'tot'
                 flag = species + '_column_density_rbands_image'
             elif datatype == '2D_col_density':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                path = get_path(key='lustre_' + survey + '_hi_column_density')
                 flag = species + '_column_density'
             else:
-                datatypeErrorMsg(surveyLogger, datatype, surveyEntry=survey)
-        elif species == 'WCO':
+                datatype_error_msg(datatype, survey_entry=survey)
+        elif species == 'wco':
             if datatype == 'original':
-                path = getPath(surveyLogger, key=sur + '_co')
-                mosaic = 'TOT'
+                path = get_path(key=survey + '_co')
+                mosaic = 'tot'
                 flag = species + '_rbands_image'
             elif datatype == '3D_integrated_line':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_co')
+                path = get_path(key='lustre_' + survey + '_co')
                 flag = species + '_line_rings'
             elif datatype == '2D_col_density':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_co_column_density')
-                flag = 'H2_column_density'
+                path = get_path(key='lustre_' + survey + '_co_column_density')
+                flag = 'h2_column_density'
             else:
-                datatypeErrorMsg(surveyLogger, datatype, surveyEntry=survey)
+                datatype_error_msg(datatype, survey_entry=survey)
         else:
-            surveyLogger.critical("Only HI and WCO species available for " + survey + " survey.")
+            logger.error('Only HI and WCO species available for {} survey.'.format(survey))
 
     # LAB
-    elif survey == 'LAB':
-        if species == 'HI':
+    elif survey == 'lab':
+        if species == 'hi':
             if datatype == 'original':
-                path = getPath(surveyLogger, key='lab_hi')
-                mosaic = 'TOT'
+                path = get_path(key='lab_hi')
+                mosaic = 'tot'
                 flag = species + '_line_image'
             elif datatype == 'new':  # glob_Tb:
-                path = getPath(surveyLogger, key='lustre_lab_hi')
+                path = get_path(key='lustre_lab_hi')
                 flag = species + '_line_image'
             elif datatype == 'clean':
-                if not mosaic == 'TOT':
-                    surveyLogger.warning("Only mosaic TOT has datatype = clean,")
-                    surveyLogger.warning("i.e. without M31,SMC, and LMC.")
+                if mosaic != 'tot':
+                    logger.warning('Only mosaic TOT has datatype=clean, i.e. without M31, SMC, and LMC.')
                     sys.exit(0)
-                path = getPath(surveyLogger, key='lustre_lab_hi')
+                path = get_path(key='lustre_lab_hi')
                 flag = species + '_line_image_clean'
             elif datatype == '2D_col_density':
-                path = getPath(surveyLogger, key='lustre_lab_hi_column_density')
+                path = get_path(key='lustre_lab_hi_column_density')
                 flag = species + '_column_density'
             elif datatype == 'split':
-                if nmsc == 0: nmsc = 1
-                path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec + '_split')
-                flag = '%s_line_part_%i-%i' % (species, nmsc, totmsc)
-            elif not datatype == 'generic':
-                datatypeErrorMsg(surveyLogger, datatype, surveyEntry=survey)
+                nmsc = 1 if nmsc == 0 else nmsc
+                path = get_path(key='lustre_' + survey + '_' + species + '_split')
+                flag = '{}_line_part_{}-{}'.format(species, nmsc, totmsc)
+            elif datatype != 'generic':
+                datatype_error_msg(datatype, survey_entry=survey)
         else:
-            surveyLogger.critical("Only HI species available for " + survey + " survey.")
+            logger.error('Only HI species available for {} survey.'.format(survey))
     # DAME
-    elif survey == 'Dame':
-        if species == 'WCO':
+    elif survey == 'dame':
+        if species == 'wco':
             if datatype == 'original':
-                path = getPath(surveyLogger, key='dame_co')
-                mosaic = 'TOT'
+                path = get_path(key='dame_co')
+                mosaic = 'tot'
                 flag = species + '_line_image'
             elif datatype == 'new':
-                path = getPath(surveyLogger, key='lustre_dame')
+                path = get_path(key='lustre_dame')
                 flag = species + '_line_image'
             elif datatype == '2D_col_density':
-                path = getPath(surveyLogger, key='lustre_dame_co_column_density')
-                flag = 'H2_column_density'
+                path = get_path(key='lustre_dame_co_column_density')
+                flag = 'h2_column_density'
             else:
-                datatypeErrorMsg(surveyLogger, datatype, surveyEntry=survey)
+                datatype_error_msg(datatype, survey_entry=survey)
         else:
-            surveyLogger.critical("Only WCO species available for " + survey + " survey.")
+            logger.error('Only WCO species available for {} survey.'.format(survey))
 
     else:
         if datatype == 'original':
-            if not (species == 'HI' or species == 'CO'):
-                surveyLogger.warning("Only HI and CO have datatype = original.")
+            if species not in ['hi', 'co']:
+                logger.warning('Only HI and CO have datatype=original.')
                 sys.exit(0)
-            path = getPath(surveyLogger, key=sur + '_' + spec)
+            path = get_path(key=survey + '_' + species)
             flag = species + '_line_image'
 
         elif datatype == 'clean':
-            if not (species == 'HI' or species == 'HI_unabsorbed' or species == 'HISA' or species == 'CO'):
-                surveyLogger.warning("Only HI and CO have datatype = clean and")
-                surveyLogger.warning("only HI_unabsorbed and HISA can load it.")
+            if species not in ['hi', 'hi_unabsorbed', 'hisa', 'co']:
+                logger.warning('Only HI and CO have datatype=clean and only HI_unabsorbed and HISA can load it.')
                 sys.exit(0)
-            if species == 'HI_unabsorbed' or species == 'HISA':
-                species = 'HI'
-                spec = species.lower()
-            path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec)
+            if species in ['hi_unabsorbed', 'hisa']:
+                species = 'hi'
+            path = get_path(key='lustre_' + survey + '_' + species)
             flag = species + '_line_image_clean'
 
         elif datatype == '2D_col_density':
-            if species == 'HI' or species == 'HISA':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec + '_column_density')
+            if species in ['hi', 'hisa']:
+                path = get_path(key='lustre_' + survey + '_' + species + '_column_density')
                 flag = species + '_column_density'
-            elif species == 'CO':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_co_column_density')
+            elif species == 'co':
+                path = get_path(key='lustre_' + survey + '_co_column_density')
                 flag = 'H2_column_density'
             elif species == 'HI+HISA':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                path = get_path(key='lustre_' + survey + '_hi_column_density')
                 flag = species + '_column_density'
             elif species == 'HI+CO':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                path = get_path(key='lustre_' + survey + '_hi_column_density')
                 flag = 'HI+H2_column_density'
             elif species == 'HI+HISA+CO':
-                path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                path = get_path(key='lustre_' + survey + '_hi_column_density')
                 flag = 'HI+HISA+H2_column_density'
 
         elif datatype == '3D_col_density':
             if not (species == 'HISA' or species == 'HI_unabsorbed'):
-                surveyLogger.warning("Only HISA and HI_unabsorbed have datatype = 3D_col_density.")
+                logger.warning('Only HISA and HI_unabsorbed have datatype=3D_col_density.')
                 sys.exit(0)
-            path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec + '_column_density')
+            path = get_path(key='lustre_' + survey + '_' + species + '_column_density')
             flag = species + '_column_density_rings'
 
         elif datatype == '3D_integrated_line':
             if not species == 'CO':
-                surveyLogger.warning("Only CO has datatype = 3D_integrated_line.")
+                logger.warning('Only CO has datatype=3D_integrated_line.')
                 sys.exit(0)
-            path = getPath(surveyLogger, key='lustre_' + sur + '_co_column_density')
+            path = get_path(key='lustre_' + survey + '_co_column_density')
             flag = 'WCO_line_rings'
 
         elif datatype == 'processed':
             if not (species == 'HISA' or species == 'HI_unabsorbed'):
-                surveyLogger.warning("Only HISA and HI_unabsorbed have datatype = processed.")
+                logger.warning('Only HISA and HI_unabsorbed have datatype=processed.')
                 sys.exit(0)
-            path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec)
+            path = get_path(key='lustre_' + survey + '_' + species)
             flag = species + '_line'
 
         elif datatype == 'lowres':
-            path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec)
+            path = get_path(key='lustre_' + survey + '_' + species)
             flag = species + '_line_lowres'
 
         elif datatype == 'split':
             if nmsc == 0: nmsc = 1
-            path = getPath(surveyLogger, key='lustre_' + sur + '_' + spec + '_split')
+            path = get_path(key='lustre_' + survey + '_' + species + '_split')
             flag = '%s_line_part_%i-%i' % (species, nmsc, totmsc)
 
     filename = path + survey + '_' + mosaic + '_' + flag + '.fits'
@@ -3232,29 +3254,29 @@ def getFile2(surveyLogger, survey, mosaic, species, type, load):
         # If Galprop
         if species == 'HI':
             if not load:
-                path = getPath(surveyLogger, key=sur + '_hi')
+                path = get_path(key=sur + '_hi')
                 mosaic = 'TOT'
                 flag = species + '_column_density_rbands_image'
             else:
                 if type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                    path = get_path(key='lustre_' + sur + '_hi_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
         elif species == 'WCO':
             if not load:
                 if type == glob_ITb:
-                    path = getPath(surveyLogger, key=sur + '_co')
+                    path = get_path(key=sur + '_co')
                     mosaic = 'TOT'
                     flag = species + '_rbands_image'
                 else:
                     typeErrorMsg(surveyLogger, type, species)
             else:
                 if type == glob_ITb:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_co')
+                    path = get_path(key='lustre_' + sur + '_co')
                     flag = species + '_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_co_column_density')
+                    path = get_path(key='lustre_' + sur + '_co_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
@@ -3265,15 +3287,15 @@ def getFile2(surveyLogger, survey, mosaic, species, type, load):
         # If LAB
         if species == 'HI':
             if not load:
-                path = getPath(surveyLogger, key='lab_hi')
+                path = get_path(key='lab_hi')
                 mosaic = 'TOT'
                 flag = species + '_line_image'
             else:
                 if type == glob_Tb:
-                    path = getPath(surveyLogger, key='lustre_lab')
+                    path = get_path(key='lustre_lab')
                     flag = species + '_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_lab_hi_column_density')
+                    path = get_path(key='lustre_lab_hi_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
@@ -3284,16 +3306,16 @@ def getFile2(surveyLogger, survey, mosaic, species, type, load):
         # If Dame
         if species == 'WCO':
             if not load:
-                path = getPath(surveyLogger, key='dame_co')
+                path = get_path(key='dame_co')
                 if type == glob_ITb:
                     mosaic = 'TOT'
                     flag = species + '_line_image'
             else:
                 if type == glob_ITb:
-                    path = getPath(surveyLogger, key='lustre_dame')
+                    path = get_path(key='lustre_dame')
                     flag = species + '_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_dame_co_column_density')
+                    path = get_path(key='lustre_dame_co_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
@@ -3303,61 +3325,61 @@ def getFile2(surveyLogger, survey, mosaic, species, type, load):
     else:
         if not load:
             if species == 'HI':
-                path = getPath(surveyLogger, key=sur + '_hi')
+                path = get_path(key=sur + '_hi')
                 if type == glob_Tb:
                     flag = species + '_line_image'
             elif species == 'CO':
-                path = getPath(surveyLogger, key=sur + '_co')
+                path = get_path(key=sur + '_co')
                 if type == glob_Tb:
                     flag = species + '_line_image'
         else:
             if species == 'HI':
                 if type == glob_Tb:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi')
+                    path = get_path(key='lustre_' + sur + '_hi')
                     flag = species + '_unabsorbed_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                    path = get_path(key='lustre_' + sur + '_hi_column_density')
                     flag = species + '_unabsorbed_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
 
             elif species == 'HISA':
                 if type == glob_Tb:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hisa')
+                    path = get_path(key='lustre_' + sur + '_hisa')
                     flag = species + '_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hisa_column_density')
+                    path = get_path(key='lustre_' + sur + '_hisa_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type)
 
             elif species == 'HI+HISA':
                 if type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                    path = get_path(key='lustre_' + sur + '_hi_column_density')
                     flag = species + '_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type, typeEntry=species)
 
             elif species == 'CO':
                 if type == glob_Tb:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_co')
+                    path = get_path(key='lustre_' + sur + '_co')
                     flag = 'CO_line'
                 elif type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_co_column_density')
+                    path = get_path(key='lustre_' + sur + '_co_column_density')
                     flag = 'H2_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type, typeEntry=species)
 
             elif species == 'HI+CO':
                 if type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                    path = get_path(key='lustre_' + sur + '_hi_column_density')
                     flag = 'HI+H2_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type, typeEntry=species)
 
             elif species == 'HI+HISA+CO':
                 if type == glob_N:
-                    path = getPath(surveyLogger, key='lustre_' + sur + '_hi_column_density')
+                    path = get_path(key='lustre_' + sur + '_hi_column_density')
                     flag = 'HI+HISA+H2_column_density'
                 else:
                     typeErrorMsg(surveyLogger, type, typeEntry=species)
@@ -3381,22 +3403,21 @@ def typeErrorMsg(surveyLogger, type, typeEntry='HI'):
     surveyLogger.critical(msg)
 
 
-def datatypeErrorMsg(surveyLogger, datatype, surveyEntry='CGPS'):
-    list = []
-    if surveyEntry == 'CGPS':
-        list = ['original', 'clean', '2D_col_density', '3D_col_density', '3D_integrated_line', 'processed', 'split',
-                'generic']
-    elif surveyEntry == 'SGPS' or surveyEntry == 'VGPS':
-        list = ['original', 'clean', '2D_col_density', '3D_col_density', 'processed', 'split', 'generic']
-    elif surveyEntry == 'LAB':
-        list = ['original', '2D_col_density', '3D_col_density', 'processed', 'split', 'generic']
+def datatype_error_msg(datatype, survey_entry='CGPS'):
+    if survey_entry == 'CGPS':
+        dtlist = ['original', 'clean', '2D_col_density', '3D_col_density', '3D_integrated_line', 'processed', 'split',
+                  'generic']
+    elif survey_entry == 'SGPS' or survey_entry == 'VGPS':
+        dtlist = ['original', 'clean', '2D_col_density', '3D_col_density', 'processed', 'split', 'generic']
+    elif survey_entry == 'LAB':
+        dtlist = ['original', '2D_col_density', '3D_col_density', 'processed', 'split', 'generic']
     else:
-        list = ['original']
+        dtlist = ['original']
 
-    surveyLogger.critical("Allowed datatypes are:")
-    for i, item in enumerate(list):
-        surveyLogger.critical("%i. %s" % (i + 1, item))
-    surveyLogger.critical("Your entry is: %s." % datatype)
+    logger.critical('Allowed datatypes are:')
+    for i, item in enumerate(dtlist):
+        logger.critical("%i. %s" % (i + 1, item))
+    logger.critical("Your entry is: %s." % datatype)
 
 
 def checkToGetData(surveyLogger, f1, f2, f3=None):
@@ -3406,7 +3427,7 @@ def checkToGetData(surveyLogger, f1, f2, f3=None):
 
     flag1, flag2, flag3 = True, True, True
 
-    if f3 == None:
+    if f3 is None:
         # if both files already exist
         if file1 and file2:
             flag1, flag2 = False, False

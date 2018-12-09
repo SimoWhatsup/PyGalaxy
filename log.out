@@ -1,0 +1,175 @@
+[18-12-02 21:55:52] helper_config.py:218 - INFO Reading survey variables...
+[18-12-02 21:55:52] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-02 21:55:52] helper_config.py:223 - INFO 2) species = HI
+[18-12-02 21:55:52] util.py:3069 - CRITICAL Path cgps_HI does not exist.
+[18-12-02 21:57:07] helper_config.py:218 - INFO Reading survey variables...
+[18-12-02 21:57:07] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-02 21:57:07] helper_config.py:223 - INFO 2) species = HI
+[18-12-02 21:57:07] util.py:3069 - ERROR Path cgps_HI does not exist.
+[18-12-02 22:12:50] helper_config.py:218 - INFO Reading survey variables...
+[18-12-02 22:12:50] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-02 22:12:50] helper_config.py:223 - INFO 2) species = HI
+[18-12-02 22:12:50] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-02 22:16:38] helper_config.py:218 - INFO Reading survey variables...
+[18-12-02 22:16:38] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-02 22:16:38] helper_config.py:223 - INFO 2) species = HI
+[18-12-02 22:16:38] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-02 22:16:42] survey.py:95 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-02 22:16:42] survey.py:132 - CRITICAL Obs object does not exist. Create it first with the 'makeObs' function.
+[18-12-02 22:16:42] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-02 22:16:49] survey.py:159 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-02 22:18:59] helper_config.py:218 - INFO Reading survey variables...
+[18-12-02 22:18:59] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-02 22:18:59] helper_config.py:223 - INFO 2) species = HI
+[18-12-02 22:18:59] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-02 22:19:03] survey.py:95 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-02 22:19:03] survey.py:132 - ERROR Obs object does not exist. Create it first with the 'makeObs' function.
+[18-12-02 22:19:03] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-02 22:19:10] survey.py:159 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 06:43:18] helper_config.py:218 - INFO Reading survey variables...
+[18-12-03 06:43:18] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-03 06:43:18] helper_config.py:223 - INFO 2) species = HI
+[18-12-03 06:43:18] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 06:43:24] survey.py:96 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 06:43:24] survey.py:134 - ERROR Obs object does not exist. Create it first with the 'make_obs' function.
+[18-12-03 06:43:24] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 06:43:30] survey.py:161 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 06:44:11] helper_config.py:218 - INFO Reading survey variables...
+[18-12-03 06:44:11] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-03 06:44:11] helper_config.py:223 - INFO 2) species = HI
+[18-12-03 06:44:11] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 06:44:14] survey.py:95 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 06:44:14] survey.py:132 - ERROR Obs object does not exist. Create it first with the 'make_obs' function.
+[18-12-03 06:44:14] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 06:44:20] survey.py:159 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 07:34:35] helper_config.py:218 - INFO Reading survey variables...
+[18-12-03 07:34:35] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-03 07:34:35] helper_config.py:223 - INFO 2) species = HI
+[18-12-03 07:34:35] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 07:34:39] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 07:42:30] helper_config.py:218 - INFO Reading survey variables...
+[18-12-03 07:42:30] helper_config.py:223 - INFO 1) survey = CGPS
+[18-12-03 07:42:30] helper_config.py:223 - INFO 2) species = HI
+[18-12-03 07:42:30] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 07:42:34] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 22:35:03] helper_config.py:244 - INFO Reading survey variables...
+[18-12-03 22:35:03] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-03 22:35:03] helper_config.py:249 - INFO 2) species = HI
+[18-12-03 22:35:03] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:35:09] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 22:35:09] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:35:09] helper_config.py:23 - CRITICAL /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-03 22:35:09] survey.py:127 - CRITICAL One or more needed files do not exist
+[18-12-03 22:35:09] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:35:13] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 22:41:41] helper_config.py:244 - INFO Reading survey variables...
+[18-12-03 22:41:41] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-03 22:41:41] helper_config.py:249 - INFO 2) species = HI
+[18-12-03 22:41:41] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:41:47] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-03 22:41:47] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:41:47] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-03 22:41:47] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-03 22:41:48] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-03 22:41:53] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-04 21:13:14] helper_config.py:244 - INFO Reading survey variables...
+[18-12-04 21:13:14] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-04 21:13:14] helper_config.py:249 - INFO 2) species = HI
+[18-12-04 21:13:14] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-04 21:13:20] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-04 21:13:20] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-04 21:13:20] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-04 21:13:20] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-04 21:13:20] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-04 21:13:24] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 07:42:11] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 07:42:11] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 07:42:11] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 07:42:11] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:42:19] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 07:42:19] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:42:19] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 07:42:19] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 07:42:19] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:42:23] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 07:43:17] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 07:43:17] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 07:43:17] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 07:43:17] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:43:21] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 07:43:21] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:43:21] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 07:43:21] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 07:43:21] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 07:43:25] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:31:51] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 17:31:51] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 17:31:51] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 17:31:51] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:31:57] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:31:57] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:31:57] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 17:31:57] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 17:31:57] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:32:00] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:47:02] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 17:47:02] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 17:47:02] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 17:47:02] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:47:06] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:47:06] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:47:06] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 17:47:06] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 17:47:06] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:47:10] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:47:10] make_correction.py:55 - INFO Open file and get data...
+[18-12-05 17:47:10] make_correction.py:157 - INFO Initializing parameters...
+[18-12-05 17:47:10] make_correction.py:158 - INFO 1) Ts = 125.00 K
+[18-12-05 17:47:10] make_correction.py:159 - INFO 2) dV = 0.82 km/s
+[18-12-05 17:47:10] make_correction.py:160 - INFO 3) Tb(min) = nan K, Tb(max) = nan K
+[18-12-05 17:47:10] make_correction.py:162 - INFO Calculating NHI...
+[18-12-05 17:47:18] make_correction.py:336 - INFO Write data to a fits file in...
+[18-12-05 17:53:13] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 17:53:13] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 17:53:13] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 17:53:13] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:53:17] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:53:17] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:53:17] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 17:53:17] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 17:53:17] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:53:20] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:53:20] make_correction.py:55 - INFO Open file and get data...
+[18-12-05 17:53:20] make_correction.py:157 - INFO Initializing parameters...
+[18-12-05 17:53:20] make_correction.py:158 - INFO 1) Ts = 125.00 K
+[18-12-05 17:53:20] make_correction.py:159 - INFO 2) dV = 0.82 km/s
+[18-12-05 17:53:21] make_correction.py:160 - INFO 3) Tb(min) = nan K, Tb(max) = nan K
+[18-12-05 17:53:21] make_correction.py:162 - INFO Calculating NHI...
+[18-12-05 17:53:30] make_correction.py:336 - INFO Write data to a fits file in...
+[18-12-05 17:55:01] helper_config.py:244 - INFO Reading survey variables...
+[18-12-05 17:55:01] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-05 17:55:01] helper_config.py:249 - INFO 2) species = HI
+[18-12-05 17:55:01] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:55:04] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:55:04] make_mosaic.py:42 - INFO Getting the data from /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:55:04] helper_config.py:23 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hisa/cgps/results/CGPS_MW2_HISA.dat doesn't exist.
+[18-12-05 17:55:04] survey.py:127 - ERROR One or more needed files do not exist
+[18-12-05 17:55:04] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-05 17:55:08] survey.py:145 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-05 17:55:08] make_correction.py:55 - INFO Open file and get data...
+[18-12-05 17:55:08] make_correction.py:157 - INFO Initializing parameters...
+[18-12-05 17:55:08] make_correction.py:158 - INFO 1) Ts = 125.00 K
+[18-12-05 17:55:08] make_correction.py:159 - INFO 2) dV = 0.82 km/s
+[18-12-05 17:55:08] make_correction.py:160 - INFO 3) Tb(min) = nan K, Tb(max) = nan K
+[18-12-05 17:55:08] make_correction.py:162 - INFO Calculating NHI...
+[18-12-05 17:55:14] make_correction.py:336 - INFO Write data to a fits file in...
+[18-12-05 17:55:14] make_correction.py:338 - INFO /Users/simone/Documents/Projects/GitHub/surveys/analysis/results/CGPS/HI/col_den/
+[18-12-05 17:55:14] make_correction.py:339 - INFO Done
+[18-12-05 17:55:15] survey.py:203 - INFO <make_correction.makeCorrection object at 0x11143a860>
+[18-12-08 23:05:09] helper_config.py:244 - INFO Reading survey variables...
+[18-12-08 23:05:09] helper_config.py:249 - INFO 1) survey = CGPS
+[18-12-08 23:05:09] helper_config.py:249 - INFO 2) species = HI
+[18-12-08 23:05:09] mosaic.py:48 - INFO /Users/simone/Documents/Projects/GitHub/surveys/data/Radio/hi/CGPS/cgps_mw2_hi_line_image.fits
+[18-12-08 23:05:20] survey.py:81 - INFO Loaded CGPS Mosaic object HI brightness_temperature
+[18-12-08 23:05:20] helper_config.py:26 - ERROR /Users/simone/Documents/Projects/GitHub/surveys/analysis/results/CGPS/HI/col_den/CGPS_MW2_HI_unabsorbed_column_density.fits already exists.
+[18-12-08 23:05:20] survey.py:206 - CRITICAL One or more needed files do not exist

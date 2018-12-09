@@ -1,0 +1,5 @@
+configparser==3.5.0
+scipy==1.1.0
+numpy==1.15.4
+astropy==3.0.5
+matplotlib==3.0.2
